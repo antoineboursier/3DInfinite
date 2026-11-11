@@ -92,7 +92,7 @@ h2{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
 #insp.folded .phead{margin-bottom:0}
 #insp.folded #insp-fold svg{transform:rotate(-90deg)}
 .seg2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-.seg2 button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 4px 7px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(160deg,var(--panel-2),var(--panel));font-weight:500;box-shadow:var(--clay)}
+.seg2 button{display:flex;align-items:center;justify-content:center;padding:8px 4px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(160deg,var(--panel-2),var(--panel));font-weight:500;box-shadow:var(--clay)}
 .seg2 button[aria-pressed="true"]{border-color:transparent;box-shadow:var(--clay),0 0 0 2px var(--warm-solid)}
 .sq{width:30px;height:30px;border-radius:9px;display:block;border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 2px 3px rgba(255,255,255,.3),inset 0 -3px 5px rgba(0,0,0,.25)}
 .sq.hole{background:repeating-linear-gradient(45deg,var(--hole) 0 4px,transparent 4px 8px);box-shadow:none}
@@ -111,6 +111,16 @@ h2{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
 .sl input[type=range]::-moz-range-thumb{width:17px;height:17px;border-radius:50%;background:#fff;border:0;box-shadow:0 2px 8px rgba(0,0,0,.5),0 0 0 4px rgba(163,148,255,.3)}
 .sl input:not([type=range]),.sl select{border:1px solid var(--line);border-radius:10px;background:var(--field);padding:5px 7px;font-variant-numeric:tabular-nums;min-width:0;width:100%}
 .sl select{grid-column:2 / 4}
+.unitsw{display:inline-flex;gap:2px;padding:2px;border:1px solid var(--line);border-radius:10px;background:var(--field);margin:0 0 9px;float:right}
+.unitsw button{border:0;background:none;border-radius:8px;padding:2px 9px;font-size:12px;color:var(--muted)}
+.unitsw button[aria-pressed="true"]{background:var(--panel-2);color:var(--fg);box-shadow:var(--clay)}
+.unitsw+*{clear:both}
+.xyz{display:grid;grid-template-columns:20px repeat(3,minmax(0,1fr));gap:6px;align-items:end;margin-bottom:8px}
+.xyz>svg{width:18px;height:18px;margin-bottom:7px;color:var(--muted)}
+.symbtn{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px}
+.symbtn button{border:1px solid var(--line);border-radius:10px;background:var(--field);padding:6px 0;font-weight:600}
+.symbtn button[aria-pressed="true"]{background:var(--warm);color:var(--warm-fg);border-color:transparent}
+#b-sym[data-on="1"]{background:var(--warm);color:var(--warm-fg)}
 .acts{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 details{border-top:1px solid var(--line);margin-top:12px;padding-top:10px}
 summary{cursor:pointer;font-weight:600;font-size:12.5px;margin-bottom:8px}
@@ -197,13 +207,14 @@ summary{cursor:pointer;font-weight:600;font-size:12.5px;margin-bottom:8px}
       <div class="phead"><span id="insp-title"></span><button class="ib" id="insp-fold" data-i="chev" data-tt="Replier le panneau"></button></div>
       <div id="insp-body">
         <div class="seg2">
-          <button id="f-solid"><i class="sq" id="sq-solid"></i><span data-t="Plein"></span></button>
-          <button id="f-hole"><i class="sq hole"></i><span data-t="Vide"></span></button>
+          <button id="f-solid" data-tt="Plein"><i class="sq" id="sq-solid"></i></button>
+          <button id="f-hole" data-tt="Vide"><i class="sq hole"></i></button>
         </div>
         <div class="swatches" id="swatches"></div>
         <label class="chk" id="l-multi" hidden><input type="checkbox" id="f-multi"><span data-t="Garder la couleur de chaque pièce"></span></label>
 
         <div id="insp-one">
+          <div class="unitsw" id="unitsw" role="group" data-tt="Régler les arrondis en pourcentage ou en valeur réelle"><button id="u-pct">%</button><button id="u-mm">mm</button></div>
           <div id="insp-prof" hidden>
             <div id="prof-text">
               <input class="wide" id="t-str" data-tt="Texte" style="margin-bottom:6px">
@@ -214,15 +225,12 @@ summary{cursor:pointer;font-weight:600;font-size:12.5px;margin-bottom:8px}
               <div class="acts"><button class="btn sm" id="t-local" data-t="Polices du PC"></button><button class="btn sm" id="t-file" data-t="Fichier de police"></button></div>
             </div>
             <div class="row two" id="insp-gen" hidden></div>
-            <div class="sl" id="row-r"><span data-t="Angles"></span><input type="range" id="s-r" min="0" step="0.1"><input id="f-r" inputmode="decimal" data-tt="Rayon des angles du profil"></div>
-            <div class="sl"><span data-t="Arête haute"></span><input type="range" id="s-rt" min="0" step="0.1"><input id="f-rt" inputmode="decimal" data-tt="Rayon de l'arête du dessus"></div>
-            <div class="sl"><span data-t="Arête basse"></span><input type="range" id="s-rb" min="0" step="0.1"><input id="f-rb" inputmode="decimal" data-tt="Rayon de l'arête du dessous"></div>
+            <div class="sl" id="row-r"><span data-t="Angles"></span><input type="range" id="s-r" min="0" max="100" step="1"><input id="f-r" inputmode="decimal" data-tt="Rayon des angles du profil"></div>
+            <div class="sl"><span data-t="Arête haute"></span><input type="range" id="s-rt" min="0" max="100" step="1"><input id="f-rt" inputmode="decimal" data-tt="Rayon de l'arête du dessus"></div>
+            <div class="sl"><span data-t="Arête basse"></span><input type="range" id="s-rb" min="0" max="100" step="1"><input id="f-rb" inputmode="decimal" data-tt="Rayon de l'arête du dessous"></div>
             <div class="sl"><span data-t="Arêtes"></span><select id="f-style"><option value="round" data-t="Arrondies"></option><option value="chamfer" data-t="Chanfreinées"></option></select></div>
-            <div class="sl"><span data-t="Creux"></span><input type="range" id="s-hol" min="0" step="0.1"><input id="f-hol" inputmode="decimal" data-tt="Épaisseur des parois (0 = plein)"></div>
-            <div class="hmode">
-              <button class="btn sm" id="hm-cup" data-i="cup" data-tt="Avec fond, ouvert dessus (pot, boîte)"><span data-t="Avec fond"></span></button>
-              <button class="btn sm" id="hm-thr" data-i="tube" data-tt="Traversant, sans fond (tube, contour du texte)"><span data-t="Traversant"></span></button>
-            </div>
+            <div class="sl"><span data-t="Creuser"></span><input type="range" id="s-hol" min="0" max="100" step="1"><input id="f-hol" inputmode="decimal" data-tt="Creuser : 0 % = plein. En mm : épaisseur des parois."></div>
+            <label class="chk" id="l-fond"><input type="checkbox" id="hm-fond"><span data-t="Fond"></span></label>
           </div>
           <div id="insp-hw" hidden>
             <div class="row">
@@ -232,26 +240,26 @@ summary{cursor:pointer;font-weight:600;font-size:12.5px;margin-bottom:8px}
             </div>
           </div>
           <div id="insp-shp" hidden>
-            <div class="sl"><span data-t="Arrondi"></span><input type="range" id="s-rr" min="0" step="0.1"><input id="f-rr" inputmode="decimal" data-tt="Rayon des arêtes vives"></div>
+            <div class="sl"><span data-t="Arrondi"></span><input type="range" id="s-rr" min="0" max="100" step="1"><input id="f-rr" inputmode="decimal" data-tt="Rayon des arêtes vives"></div>
           </div>
           <p class="note" id="insp-smooth" hidden data-t="Forme lisse : pas d'arête à arrondir."></p>
           <details id="insp-dims">
             <summary data-t="Cotes"></summary>
-            <div class="row">
-              <label class="fld"><span data-t="Largeur X"></span><input id="f-w" inputmode="decimal"></label>
-              <label class="fld"><span data-t="Profondeur Y"></span><input id="f-d" inputmode="decimal"></label>
-              <label class="fld"><span data-t="Hauteur Z"></span><input id="f-h" inputmode="decimal"></label>
+            <div class="xyz" data-i="dims" data-tt="Taille">
+              <label class="fld"><span>X</span><input id="f-w" inputmode="decimal" data-tt="Largeur X"></label>
+              <label class="fld"><span>Y</span><input id="f-d" inputmode="decimal" data-tt="Profondeur Y"></label>
+              <label class="fld"><span>Z</span><input id="f-h" inputmode="decimal" data-tt="Hauteur Z"></label>
             </div>
             <label class="chk"><input type="checkbox" id="f-lock" checked><span data-t="Garder les proportions"></span></label>
-            <div class="row">
-              <label class="fld"><span data-t="Position X"></span><input id="f-x" inputmode="decimal"></label>
-              <label class="fld"><span data-t="Position Y"></span><input id="f-y" inputmode="decimal"></label>
-              <label class="fld"><span data-t="Sous l'objet Z"></span><input id="f-z" inputmode="decimal"></label>
+            <div class="xyz" data-i="move" data-tt="Position">
+              <label class="fld"><span>X</span><input id="f-x" inputmode="decimal" data-tt="Position X"></label>
+              <label class="fld"><span>Y</span><input id="f-y" inputmode="decimal" data-tt="Position Y"></label>
+              <label class="fld"><span>Z</span><input id="f-z" inputmode="decimal" data-tt="Sous l'objet Z"></label>
             </div>
-            <div class="row" style="margin-bottom:0">
-              <label class="fld"><span data-t="Rotation X°"></span><input id="f-rx" inputmode="decimal"></label>
-              <label class="fld"><span data-t="Rotation Y°"></span><input id="f-ry" inputmode="decimal"></label>
-              <label class="fld"><span data-t="Rotation Z°"></span><input id="f-rz" inputmode="decimal"></label>
+            <div class="xyz" data-i="rotate" data-tt="Rotation" style="margin-bottom:0">
+              <label class="fld"><span>X°</span><input id="f-rx" inputmode="decimal" data-tt="Rotation X°"></label>
+              <label class="fld"><span>Y°</span><input id="f-ry" inputmode="decimal" data-tt="Rotation Y°"></label>
+              <label class="fld"><span>Z°</span><input id="f-rz" inputmode="decimal" data-tt="Rotation Z°"></label>
             </div>
           </details>
         </div>
@@ -259,6 +267,7 @@ summary{cursor:pointer;font-weight:600;font-size:12.5px;margin-bottom:8px}
     </div>
 
     <div class="float chips">
+      <button class="ib" id="b-sym" data-i="sym" data-pop="pop-sym" data-tt="Mode symétrie (mandala)"></button>
       <button class="ib" id="b-magnet" data-i="magnet" data-tt="Magnétisme : accrocher aux autres objets et au plateau"></button>
       <select id="p-snap" data-tt="Pas de la grille"></select>
       <button class="ib" id="b-plate" data-i="grid" data-pop="pop-plate" data-tt="Plateau et unités"></button>
@@ -301,16 +310,19 @@ summary{cursor:pointer;font-weight:600;font-size:12.5px;margin-bottom:8px}
   <button class="ib" id="m-x" data-i="mirror" data-tt="Miroir gauche-droite">X</button>
   <button class="ib" id="m-y" data-i="mirror" data-tt="Miroir avant-arrière">Y</button>
   <button class="ib" id="m-z" data-i="mirror" data-tt="Miroir haut-bas">Z</button></div></div>
-<div class="panel pop" id="pop-repeat" hidden style="width:240px">
-  <label class="fld" style="margin-bottom:8px"><span data-t="Répéter"></span><select id="r-type">
-    <option value="lin" data-t="En ligne"></option><option value="circ" data-t="En cercle"></option><option value="s4" data-t="Symétrie ×4"></option><option value="s8" data-t="Symétrie ×8"></option></select></label>
-  <div class="row two">
-    <label class="fld" id="r-ln"><span data-t="Nombre"></span><input id="r-n" inputmode="numeric"></label>
-    <label class="fld" id="r-la"><span></span><input id="r-a" inputmode="decimal"></label>
-    <label class="fld" id="r-lb"><span></span><input id="r-b" inputmode="decimal"></label>
-    <label class="fld" id="r-lc"><span></span><input id="r-c" inputmode="decimal"></label>
-  </div>
+<div class="panel pop" id="pop-repeat" hidden style="width:290px">
+  <label class="fld" style="margin-bottom:10px"><span data-t="Répéter"></span><select id="r-type">
+    <option value="lin" data-t="En ligne"></option><option value="circ" data-t="En cercle"></option></select></label>
+  <div class="sl" id="r-ln"><span data-t="Nombre"></span><input type="range" id="rs-n" min="2" max="40" step="1"><input id="r-n" inputmode="numeric"></div>
+  <div class="sl" id="r-la"><span></span><input type="range" id="rs-a"><input id="r-a" inputmode="decimal"></div>
+  <div class="sl" id="r-lb"><span></span><input type="range" id="rs-b"><input id="r-b" inputmode="decimal"></div>
+  <div class="sl" id="r-lc"><span></span><input type="range" id="rs-c"><input id="r-c" inputmode="decimal"></div>
   <button class="btn primary" id="r-go" data-t="Créer les copies"></button>
+</div>
+<div class="panel pop" id="pop-sym" hidden style="width:260px">
+  <div class="symbtn" id="symbtn"><button data-s="0" data-t="Non"></button><button data-s="2">×2</button><button data-s="4">×4</button><button data-s="8">×8</button></div>
+  <p class="note" style="margin:0 0 8px" data-t="Le plateau est partagé en parts : ce que tu poses dans l'une se répète en miroir dans les autres, en direct."></p>
+  <button class="btn sm" id="sym-fix" data-t="Figer les copies en objets"></button>
 </div>
 <div class="panel pop menu" id="pop-import" hidden>
   <button id="b-import" data-i="import"><span data-t="Fichier STL"></span></button>
@@ -397,7 +409,8 @@ const SHAPES = {
             build:()=>Manifold.revolve(CrossSection.circle(3,64).translate([7,0]),160)},
   dome:    {name:'Dôme',      icon:'<path d="M5 22a12 12 0 0124 0"/><ellipse cx="17" cy="22" rx="12" ry="4.5"/>',
             build:()=>Manifold.sphere(10,128).intersect(Manifold.cube([20,20,10]).translate([-10,-10,0]))},
-  tri:     {name:'Triangle',  icon:'<path d="M12 6L3 24l10 6 18-8-9-16z"/><path d="M12 6l10 0M3 24l18-2M22 6l-1 16"/>',
+  tri3:    {name:'Triangle',  icon:'<path d="M17 5L31 23H3z"/><path d="M3 23v5h28v-5"/>', src0:[[[-10,-5.774],[10,-5.774],[0,11.547]]], h:6},
+  tri:     {name:'Triangle',  hide:1, icon:'<path d="M12 6L3 24l10 6 18-8-9-16z"/><path d="M12 6l10 0M3 24l18-2M22 6l-1 16"/>',
             sec:[[-10,-8.66],[10,-8.66],[0,8.66]], build:()=>lay([SHAPES.tri.sec],20)},
   roof:    {name:'Toit arrondi', icon:'<path d="M4 24a8 8 0 0116 0z"/><path d="M12 16l10-5a8 8 0 018 8l-10 5M4 24l10-5"/>',
             sec:Array.from({length:97},(_,i)=>[10*Math.cos(Math.PI*i/96),10*Math.sin(Math.PI*i/96)]), build:()=>lay([SHAPES.roof.sec],20)},
@@ -507,7 +520,7 @@ function setGen(o,key,val){
   if(gen.k==='gear'){ prof.sx=1; prof.sy=1; }   /* un engrenage garde ses cotes réelles : diamètre primitif = module × dents */
   return applyProf(o,prof);
 }
-for(const k in SHAPES){ const sh=SHAPES[k]; if(!sh.gen) continue; sh.prof={...PROF0,h:sh.h,gen:sh.gen,src:GEN[sh.gen.k](sh.gen)}; sh.base=profBase(sh.prof); }
+for(const k in SHAPES){ const sh=SHAPES[k]; if(sh.gen) sh.prof={...PROF0,h:sh.h,gen:sh.gen,src:GEN[sh.gen.k](sh.gen)}; else if(sh.src0) sh.prof={...PROF0,h:sh.h,src:sh.src0}; else continue; sh.base=profBase(sh.prof); }
 for(const k of ['tri','roof']) SHAPES[k].shp={k,rr:0};
 { const g=GEN.gear({z:10,m:2,bore:7,j:0}), sc=13/12; SHAPES.gear.icon=g.map(c=>'<path d="M'+c.map(q=>(17+q[0]*sc).toFixed(1)+' '+(17-q[1]*sc).toFixed(1)).join('L')+'z"/>').join(''); }
 
@@ -763,27 +776,20 @@ function copyXform(o, mirror, deg, px, py){
   }
   return c;
 }
-function repeatSel(){
-  const list=selected(); if(!list.length) return;
-  const type=$('r-type').value, n=Math.round(num($('r-n').value)||0), a=(num($('r-a').value)||0)*U(), b=(num($('r-b').value)||0)*U(), c=(num($('r-c').value)||0)*U();
-  if((type==='lin'||type==='circ') && (n<2||n>200)){ toast('Le nombre doit être compris entre 2 et 200.'); return; }
-  if(type==='lin' && !a && !b && !c){ toast('Indique un pas sur au moins un axe.'); return; }
-  const made=[];
-  if(type==='lin') for(let i=1;i<n;i++) for(const o of list){ const k=cloneObj(o); k.id=S.nextId++; k.pos[0]+=a*i; k.pos[1]+=b*i; k.pos[2]+=c*i; made.push(k); }
-  else if(type==='circ') for(let i=1;i<n;i++) for(const o of list) made.push(copyXform(o,false,360*i/n,a,b));
-  else for(const [m,d] of (type==='s4'?[[1,0],[0,180],[1,180]]:[[1,0],[0,90],[1,90],[0,180],[1,180],[0,270],[1,270]])) for(const o of list) made.push(copyXform(o,!!m,d,a,b));
-  pushUndo(); S.objs.push(...made); S.sel=new Set([...list,...made].map(o=>o.id)); refresh();
-  toast(made.length+' copie'+(made.length>1?'s créées':' créée')+'. Tout est sélectionné, prêt à grouper.');
-}
 function repeatUI(reset){
-  const type=$('r-type').value, lin=type==='lin', circ=type==='circ';
-  $('r-ln').hidden=!(lin||circ); $('r-lc').hidden=!lin;
-  $('r-la').firstElementChild.textContent=T(lin?'Pas X':'Centre X'); $('r-lb').firstElementChild.textContent=T(lin?'Pas Y':'Centre Y'); $('r-lc').firstElementChild.textContent=T('Pas Z');
-  if(!reset) return;
-  const list=selected(), bb=list.length?boxOfMany(list):null;
-  $('r-n').value=lin?3:6; $('r-c').value=0;
-  if(lin){ $('r-a').value=fmt(bb?Math.ceil(bb.max[0]-bb.min[0])+5:20); $('r-b').value=0; }
-  else{ $('r-a').value=fmt(S.plate[0]/2); $('r-b').value=fmt(S.plate[1]/2); }
+  const lin=$('r-type').value==='lin';
+  $('r-lc').hidden=!lin;
+  $('r-la').firstElementChild.textContent=T(lin?'Écart X':'Diamètre'); $('r-lb').firstElementChild.textContent=T(lin?'Écart Y':'Écartement'); $('r-lc').firstElementChild.textContent=T('Écart Z');
+  const list=selected(), bb=list.length?boxOfMany(list):null, w=bb?bb.max[0]-bb.min[0]:20, d=bb?bb.max[1]-bb.min[1]:20, big=Math.max(S.plate[0],S.plate[1]);
+  const rng=(id,mn,mx)=>{ const e=$('rs-'+id); e.min=mn; e.max=mx; e.step=S.snap||1; };
+  if(lin){ rng('a',-big/2,big/2); rng('b',-big/2,big/2); rng('c',0,S.plate[2]/2); }
+  else{ rng('a',Math.ceil(Math.max(w,d)),big); rng('b',1,Math.max(20,Math.ceil(big/2))); }
+  if(reset){
+    $('r-c').value=0;
+    if(lin){ $('r-n').value=3; $('r-a').value=fmt(Math.ceil(w)+5); $('r-b').value=0; }
+    else{ const D=Math.max(40,Math.ceil(Math.max(w,d)*3)); $('r-n').value=6; $('r-a').value=fmt(D); $('r-b').value=fmt(+(Math.PI*D/6).toFixed(1)); }
+  }
+  for(const id of ['n','a','b','c']) $('rs-'+id).value=num($('r-'+id).value)||0;
 }
 /* ---------- visserie : trous prêts à l'emploi (cotes ISO courantes, inserts type laiton à chaud) ---------- */
 const HW={'M2':{d:2,cap:3.8,csk:4,af:4,nut:1.6,ins:3.2,insL:4},'M2,5':{d:2.5,cap:4.5,csk:5,af:5,nut:2,ins:4,insL:5},'M3':{d:3,cap:5.5,csk:6,af:5.5,nut:2.4,ins:4,insL:5.7},
@@ -904,16 +910,18 @@ function build3MF(list){
     {name:'3D/3dmodel.model',data:model}]);
 }
 async function export3MF(){
-  const pool=(S.sel.size?selected():S.objs).filter(o=>!o.hole);
+  let pool=(S.sel.size?selected():S.objs).filter(o=>!o.hole);
   if(!pool.length){ toast("Rien à exporter : il faut au moins un objet plein."); return; }
+  pool=pool.concat(symCopies(pool));
   let bytes; try{ bytes=build3MF(pool); }catch(e){ console.error(e); toast("L'export a échoué."); return; }
   const r=await saveFile('3DI-export.3mf', bytes, true);
   if(r) toast(T(r==='zip'?'3MF exporté ({0} pièces), rangé dans un .zip.':'3MF exporté ({0} pièces).',pool.length));
 }
 const downloadsP = window.claude?.use ? window.claude.use('downloads').catch(()=>null) : Promise.resolve(null);
 async function exportSTL(){
-  const pool=(S.sel.size?selected():S.objs).filter(o=>!o.hole);
+  let pool=(S.sel.size?selected():S.objs).filter(o=>!o.hole);
   if(!pool.length){ toast("Rien à exporter : il faut au moins un objet plein."); return; }
+  pool=pool.concat(symCopies(pool));
   let bytes;
   try{ const u=unionAll(pool); bytes=stlBytes(u); u.delete(); }
   catch(e){ console.error(e); toast("L'export a échoué."); return; }
@@ -989,14 +997,14 @@ function serialize(){
     bases.push({v:b64(new Uint8Array(b.verts.buffer,b.verts.byteOffset,b.verts.byteLength)), t:b64(new Uint8Array(b.tris.buffer,b.tris.byteOffset,b.tris.byteLength)), s:b.size,
       p:b.paint?b.paint.map(q=>({c:q.color, v:b64(new Uint8Array(q.verts.buffer,q.verts.byteOffset,q.verts.byteLength)), t:b64(new Uint8Array(q.tris.buffer,q.tris.byteOffset,q.tris.byteLength))})):undefined}); } return i; };
   const so=o=>({...o, base:bi(o.base), children:o.children?o.children.map(so):null});
-  return {app:'3DInfinite', version:1, plate:S.plate, printer:+$('p-printer').value, unit:S.unit, snap:S.snap, nextId:S.nextId, count:S.count, objs:S.objs.map(so), bases};
+  return {app:'3DInfinite', version:1, plate:S.plate, printer:+$('p-printer').value, unit:S.unit, snap:S.snap, sym:S.sym||0, nextId:S.nextId, count:S.count, objs:S.objs.map(so), bases};
 }
 function deserialize(d){
   if(!d||d.app!=='3DInfinite'||!Array.isArray(d.objs)) throw new Error('format');
   const bases=d.bases.map(b=>{ const o={verts:new Float32Array(unb64(b.v).buffer), tris:new Uint32Array(unb64(b.t).buffer), size:b.s};
     if(b.p) o.paint=b.p.map(q=>({color:q.c, verts:new Float32Array(unb64(q.v).buffer), tris:new Uint32Array(unb64(q.t).buffer)})); return o; });
   const lo=o=>({...o, base:bases[o.base], children:o.children?o.children.map(lo):null});
-  S.objs=d.objs.map(lo); S.sel=new Set(); S.nextId=d.nextId||1; S.count=d.count||{}; S.unit=d.unit||'mm'; S.snap=d.snap??1;
+  S.objs=d.objs.map(lo); S.sel=new Set(); S.nextId=d.nextId||1; S.sym=[2,4,8].includes(d.sym)?d.sym:0; S.count=d.count||{}; S.unit=d.unit||'mm'; S.snap=d.snap??1;
   $('p-unit').value=S.unit; $('p-snap').value=String(S.snap); $('p-printer').value=String(d.printer??0);
   $('p-custom').hidden=PRINTERS[+$('p-printer').value][0]!=='Personnalisé';
   setPlate(d.plate||[256,256,256]);
@@ -1036,7 +1044,7 @@ function loadDoc(f){
 async function openDialog(){ if(!await guard()) return; const f=await DESK.openFile(); if(f) loadDoc(f); }
 async function newProject(){
   if(!await guard()) return;
-  S.objs=[]; S.sel.clear(); S.undo.length=0; S.redo.length=0; refresh(); setDoc(null,null,false); toast('Nouveau projet.');
+  S.objs=[]; S.sel.clear(); S.undo.length=0; S.redo.length=0; S.sym=0; refresh(); setDoc(null,null,false); toast('Nouveau projet.');
 }
 if(DESK){
   DESK.onMenu(async cmd=>{
@@ -1163,9 +1171,12 @@ const gizmo=new THREE.Group(); gizmo.visible=false; scene.add(gizmo);
 const gz={size:[],rot:[]};
 const V3=(x=0,y=0,z=0)=>new THREE.Vector3(x,y,z);
 const gMat=()=>new THREE.MeshBasicMaterial({color:0x000000,depthTest:false,transparent:true});
+const olMat=new THREE.MeshBasicMaterial({color:0x2f2879,side:THREE.BackSide,depthTest:false,transparent:true});
+{ const ol=new THREE.Mesh(handle.geometry,new THREE.MeshBasicMaterial({color:0x2f2879,side:THREE.BackSide})); ol.scale.setScalar(1.22); ol.userData.ol=1; handle.add(ol); }
 const pickM=new THREE.MeshBasicMaterial({visible:false}), pickG=new THREE.SphereGeometry(1,8,6), cubeG=new THREE.BoxGeometry(1,1,1);
 function mkSize(sx,sy,top){
   const m=new THREE.Mesh(cubeG,gMat()); m.renderOrder=10; m.userData={g:'size',sx,sy,top,k:(top||(sx&&sy))?.42:.3};
+  const ol=new THREE.Mesh(cubeG,olMat); ol.scale.setScalar(1.34); ol.renderOrder=9; m.add(ol);
   const pk=new THREE.Mesh(pickG,pickM); pk.scale.setScalar(1.7); m.add(pk); gizmo.add(m); gz.size.push(m);
 }
 for(const [sx,sy] of [[1,1],[1,-1],[-1,1],[-1,-1],[1,0],[-1,0],[0,1],[0,-1]]) mkSize(sx,sy,false);
@@ -1174,16 +1185,25 @@ function mkRot(a,ou,ov){
   const u=(a+1)%3, v=(a+2)%3, t0=Math.atan2(ov,ou), g=new THREE.Group(), mat=gMat(), pts=[];
   const at=t=>V3().setComponent(u,Math.cos(t)).setComponent(v,Math.sin(t));
   for(let i=0;i<=12;i++) pts.push(at(t0-.75+i*.125));
-  const tube=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),16,.09,6),mat); tube.renderOrder=10; g.add(tube);
+  const crv=new THREE.CatmullRomCurve3(pts), tube=new THREE.Mesh(new THREE.TubeGeometry(crv,16,.06,8),mat); tube.renderOrder=10; g.add(tube);
+  const tol=new THREE.Mesh(new THREE.TubeGeometry(crv,16,.105,8),olMat); tol.renderOrder=9; g.add(tol);
   for(const sg of [-1,1]){
-    const t=t0+sg*.75, tip=new THREE.Mesh(new THREE.ConeGeometry(.24,.5,10),mat);
+    const t=t0+sg*.75, tip=new THREE.Mesh(new THREE.ConeGeometry(.19,.44,12),mat), tipo=new THREE.Mesh(new THREE.ConeGeometry(.27,.6,12),olMat);
     const tan=V3().setComponent(u,-Math.sin(t)*sg).setComponent(v,Math.cos(t)*sg);
     tip.position.copy(at(t)).addScaledVector(tan,.12); tip.quaternion.setFromUnitVectors(V3(0,1,0),tan); tip.renderOrder=10; g.add(tip);
+    tipo.position.copy(tip.position).addScaledVector(tan,.02); tipo.quaternion.copy(tip.quaternion); tipo.renderOrder=9; g.add(tipo);
   }
   const pk=new THREE.Mesh(pickG,pickM); pk.position.copy(at(t0)); pk.scale.setScalar(.95); g.add(pk);
   g.userData={g:'rot',a,mat}; gizmo.add(g); gz.rot.push(g);
 }
 mkRot(2,-1,-1); mkRot(0,-1,1); mkRot(1,1,1);
+/* anneau de rotation : curseur dans l'anneau = crans de 15°, curseur dehors = degré par degré */
+const rotRing=(()=>{ const a=[], P=(r,t)=>a.push(r*Math.cos(t),r*Math.sin(t),0);
+  for(let i=0;i<120;i++){ P(1,i/120*2*Math.PI); P(1,(i+1)/120*2*Math.PI); }
+  for(let i=0;i<24;i++){ const t=i/24*2*Math.PI; P(i%3===0?.8:.88,t); P(1,t); }
+  for(let i=0;i<72;i++){ const t=i/72*2*Math.PI; P(1,t); P(1.04,t); }
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(a,3));
+  const l=new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0x5ee6d8,depthTest:false,transparent:true,opacity:.9})); l.renderOrder=8; l.visible=false; scene.add(l); return l; })();
 function frameOf(o){
   const q=new THREE.Quaternion().setFromEuler(new THREE.Euler(o.rot[0]*D2R,o.rot[1]*D2R,o.rot[2]*D2R,'XYZ'));
   return {q, c:V3(o.pos[0],o.pos[1],o.pos[2]), ax:V3(1,0,0).applyQuaternion(q), ay:V3(0,1,0).applyQuaternion(q), az:V3(0,0,1).applyQuaternion(q)};
@@ -1206,7 +1226,7 @@ let theme={};
 function readTheme(){
   const gc=stored('3di-grid'), okc=gc&&/^#[0-9a-f]{6}$/i.test(gc);
   theme={scene:css('--scene'),plate:css('--plate'),grid:okc?gc:css('--grid'),strong:okc?'#'+new THREE.Color(gc).lerp(new THREE.Color('#ffffff'),.35).getHexString():css('--grid-strong'),handle:css('--handle'),hole:css('--hole'),accent:css('--select')};
-  scene.background=null; handle.material.color.set(theme.handle);
+  scene.background=null; handle.material.color.set(theme.handle); olMat.color.set(theme.plate); handle.children.forEach(c=>c.userData.ol&&c.material.color.set(theme.plate));
   gz.size.forEach(m=>m.material.color.set(theme.handle)); gz.rot.forEach(g=>g.userData.mat.color.set(theme.accent));
   buildPlate(); for(const m of meshes.values()) m.userData.sig=''; syncMeshes();
 }
@@ -1311,7 +1331,7 @@ function syncMeshes(){
   const list=selected();
   if(list.length){ const b=boxOfMany(list); handle.position.set((b.min[0]+b.max[0])/2,(b.min[1]+b.max[1])/2,b.max[2]); handle.userData.top=b.max[2]; handle.visible=true; }
   else handle.visible=false;
-  placeGizmo();
+  placeGizmo(); syncSym();
   draw();
 }
 function frame(){
@@ -1414,7 +1434,10 @@ canvas.addEventListener('pointerdown',ev=>{
     const o=selected()[0], f=frameOf(o), e=V3().setComponent(gd.a,1), p0=V3();
     const plane=new THREE.Plane().setFromNormalAndCoplanarPoint(e,f.c);
     const flat=Math.abs(ray.ray.direction.dot(e))<.15 || !ray.ray.intersectPlane(plane,p0);
-    drag={mode:'rot',o,f,e,plane,v0:p0.sub(f.c),flat,start,moved:false};
+    const bb=boxOf(o), dm=[0,1,2].map(i=>bb.max[i]-bb.min[i]), R=Math.hypot(dm[(gd.a+1)%3],dm[(gd.a+2)%3])/2+camera.position.distanceTo(f.c)*.03;
+    rotRing.position.copy(f.c); rotRing.quaternion.setFromUnitVectors(V3(0,0,1),e); rotRing.scale.setScalar(R); rotRing.material.color.set(theme.accent);
+    const v0=p0.sub(f.c), R2=flat?R:Math.max(R*.5,v0.length()*.88); rotRing.scale.setScalar(R2);
+    drag={mode:'rot',o,f,e,plane,v0,flat,start,moved:false,R:R2};
   }else if(handle.visible && ray.intersectObject(handle).length){
     const n=camera.getWorldDirection(new THREE.Vector3()); n.z=0; if(n.lengthSq()<1e-4) n.set(0,1,0); n.normalize();
     const plane=new THREE.Plane().setFromNormalAndCoplanarPoint(n,handle.position), p0=new THREE.Vector3();
@@ -1462,6 +1485,8 @@ canvas.addEventListener('pointermove',ev=>{
       if(d.sy) dp=Math.max(MIN,snapv(p.dot(f.ay)*d.sy));
       if(lock){ const k=d.sx&&d.sy?Math.max(w/d.s0[0],dp/d.s0[1]):d.sx?w/d.s0[0]:dp/d.s0[1]; w=d.s0[0]*k; dp=d.s0[1]*k; h=d.s0[2]*k; }
     }
+    /* toutes les cotes suivent le pas de la grille ; les champs « Cotes » permettent d'être plus précis */
+    if(S.snap){ w=Math.max(S.snap,snapv(w)); dp=Math.max(S.snap,snapv(dp)); h=Math.max(S.snap,snapv(h)); }
     o.size=[w,dp,h];
     const c=d.A.clone().addScaledVector(f.az,h/2);
     if(!d.top) c.addScaledVector(f.ax,d.sx*w/2).addScaledVector(f.ay,d.sy*dp/2);
@@ -1473,7 +1498,8 @@ canvas.addEventListener('pointermove',ev=>{
     const d=drag, p=V3(); let ang;
     if(d.flat) ang=(ev.clientX-d.start.x)*.5;
     else{ if(!ray.ray.intersectPlane(d.plane,p)) return; p.sub(d.f.c); ang=Math.atan2(V3().crossVectors(d.v0,p).dot(d.e), d.v0.dot(p))/D2R; }
-    const step=ev.shiftKey?45:1; ang=Math.round(ang/step)*step;
+    rotRing.visible=!d.flat;
+    const step=ev.shiftKey?45:(!d.flat&&p.length()<d.R)?15:1; ang=Math.round(ang/step)*step;
     const q=new THREE.Quaternion().setFromAxisAngle(d.e,ang*D2R).multiply(d.f.q), eu=new THREE.Euler().setFromQuaternion(q,'XYZ');
     d.o.rot=[eu.x/D2R,eu.y/D2R,eu.z/D2R].map(r=>Math.round(r*1000)/1000+0);
     showTip(ev, ang+'°');
@@ -1487,7 +1513,7 @@ canvas.addEventListener('pointermove',ev=>{
 });
 function showTip(ev,txt){ const t=$('tip'), r=view.getBoundingClientRect(); t.textContent=txt; t.style.left=(ev.clientX-r.left)+'px'; t.style.top=(ev.clientY-r.top)+'px'; t.hidden=false; }
 const endDrag=ev=>{
-  $('tip').hidden=true; guides.visible=false; draw();
+  $('tip').hidden=true; guides.visible=false; rotRing.visible=false; draw();
   if(nd){ const n=nd; nd=null; if(!n.moved && n.ctx) openCtx(ev); return; }
   if(!drag) return;
   if(!drag.moved){
@@ -1513,6 +1539,11 @@ canvas.addEventListener('pointerup',endDrag); canvas.addEventListener('pointerca
 
 /* ---------- langues : le français sert de clé, l'anglais est une table ---------- */
 const EN={
+  'Creuser':'Hollow','Fond':'Bottom','Creuser : 0 % = plein. En mm : épaisseur des parois.':'Hollow: 0% = solid. In mm: wall thickness.','Régler les arrondis en pourcentage ou en valeur réelle':'Set rounding as a percentage or a real value',
+  'Taille':'Size','Position':'Position','Rotation':'Rotation','Écart X':'Step X','Écart Y':'Step Y','Écart Z':'Step Z','Diamètre':'Diameter','Écartement':'Spacing','Indique un écart sur au moins un axe.':'Set a step on at least one axis.',
+  'Non':'Off','Mode symétrie (mandala)':'Symmetry mode (mandala)','Figer les copies en objets':'Turn copies into objects',
+  "Le plateau est partagé en parts : ce que tu poses dans l'une se répète en miroir dans les autres, en direct.":'The plate is split into sectors: what you place in one is mirrored live in the others.',
+  'Symétrie ×{0} : pose tes formes dans une part, les autres suivent.':'Symmetry ×{0}: place shapes in one sector, the others follow.',
   'Triangle':'Triangle','Toit arrondi':'Round roof','Polygone':'Polygon','Étoile':'Star','Bulle':'Speech bubble','Engrenage':'Gear','MetaFillet':'MetaFillet',
   'Quart-de-rond':'Quarter round','Demi-rond':'Half round','Doucine':'Ogee','Cadre':'Frame','Chambranle':'Casing','Corniche':'Cornice',
   'Moulures':'Mouldings','Piles et aimants':'Batteries and magnets','Pile':'Battery','Aimant':'Magnet','Couleur de la grille':'Grid colour','Par défaut':'Default',
@@ -1609,6 +1640,8 @@ const ICON={
   matte:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z', gloss:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M7.5 11a5 5 0 0 1 3.5-4.5 M8 14.5v.01',
   cup:'M4 4v15h16V4 M8 4v11h8V4', tube:'M4 4h16v16H4z M8 8h8v8H8z',
   align:'M4 3v18 M8 6h11v4H8z M8 14h6v4H8z', mirror:'M12 3v18 M9 7l-6 5 6 5z M15 7l6 5-6 5z',
+  dims:'M4 20V8l8-4 8 4v12 M4 8l8 4 8-4 M12 12v9', move:'M12 3v18 M3 12h18 M9 6l3-3 3 3 M9 18l3 3 3-3 M6 9l-3 3 3 3 M18 9l3 3-3 3', rotate:'M20 12a8 8 0 1 1-2.900-6.200 M20 4v5h-5',
+  sym:'M12 3v18 M3 12h18 M5.500 5.500l13 13 M18.500 5.500l-13 13',
   repeat:'M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M14 14h6v6h-6z', drop:'M12 3v12 M7 10l5 5 5-5 M4 20h16',
   home:'M3 11l9-8 9 8 M5 10v10h14V10 M10 20v-6h4v6', fit:'M4 9V4h5 M20 9V4h-5 M4 15v5h5 M20 15v5h-5 M9 9h6v6H9z',
   plus:'M12 5v14 M5 12h14', minus:'M5 12h14',
@@ -1671,6 +1704,30 @@ function hasCorners(pf){
 /* « Creux » : une seule épaisseur, deux façons de creuser (avec fond = coque, traversant = contour) */
 const holMode=pf=>pf.outline>0?'through':pf.shell>0?'cup':(pf.hm||'cup');
 const holVal=pf=>pf.outline>0?pf.outline:pf.shell>0?pf.shell:0;
+/* arrondis et creux : la jauge va de 0 à 100 % d'un plafond qui dépend de la taille, pour ne jamais « casser » la forme.
+   Le champ accepte un pourcentage ou une valeur réelle ; on peut forcer l'un ou l'autre en tapant « 30% » ou « 2mm ». */
+let RU = stored('3di-ru')==='mm' ? 'mm' : '%';
+function capOf(o,key){
+  if(key==='rr') return Math.max(.1,Math.min(o.size[0],o.size[1],o.size[2])/3);
+  const side=Math.max(.1,Math.min(o.size[0],o.size[1])/2);
+  return key==='r'||key==='hol' ? side : Math.max(.1,Math.min(o.size[2]/2,side));
+}
+const MINWALL=.4;
+const holPct=(o,t)=>t>0?Math.max(1,Math.min(100,Math.round((1-(t-MINWALL)/Math.max(.01,capOf(o,'hol')-MINWALL))*100))):0;
+const holWall=(o,p)=>p<=0?0:Math.max(MINWALL,MINWALL+(capOf(o,'hol')-MINWALL)*(1-p/100));
+function showParam(key,o,mm){
+  const sl=$('s-'+key), nf=$('f-'+key), cap=capOf(o,key), pct=key==='hol'?holPct(o,mm):Math.min(100,Math.round(mm/cap*100));
+  if(document.activeElement!==sl) sl.value=pct;
+  nf.value=RU==='%'?pct+' %':fmt(mm);
+}
+/* texte tapé -> millimètres (ou null) */
+function readParam(key,o,txt){
+  const t=String(txt).trim().toLowerCase(), v=num(t); if(v===null||v<0) return null;
+  const asPct=/%/.test(t)||(!/mm|cm/.test(t)&&RU==='%'), cap=capOf(o,key);
+  if(key==='hol') return asPct?holWall(o,Math.min(100,v)):Math.min(cap,v*U());
+  return asPct?Math.min(100,v)/100*cap:Math.min(cap,v*U());
+}
+function unitUI(){ $('u-pct').setAttribute('aria-pressed',RU==='%'); $('u-mm').setAttribute('aria-pressed',RU==='mm'); $('u-mm').textContent=S.unit; }
 function updateInspector(){
   const list=selected(), n=list.length;
   $('insp').hidden=n===0; $('insp-one').hidden=n!==1;
@@ -1688,17 +1745,16 @@ function updateInspector(){
     const o=list[0], b=boxOf(o), pf=o.kind==='profile'?o.prof:null;
     $('insp-prof').hidden=!pf; $('insp-hw').hidden=o.kind!=='hw';
     $('insp-shp').hidden=!(o.kind==='shape'&&o.shp); $('insp-smooth').hidden=!(o.kind==='shape'&&o.smooth&&!o.shp);
-    if(o.kind==='shape'&&o.shp){ const sl=$('s-rr'); sl.max=Math.max(1,+(Math.min(o.size[0],o.size[1],o.size[2])/3).toFixed(1)); if(document.activeElement!==sl) sl.value=o.shp.rr||0; $('f-rr').value=fmt(o.shp.rr||0); }
+    $('unitsw').hidden=!(pf||(o.kind==='shape'&&o.shp)); unitUI();
+    if(o.kind==='shape'&&o.shp) showParam('rr',o,o.shp.rr||0);
     if(o.kind==='hw'){ $('h-size').value=o.hw.size; $('h-jeu').value=fmt(o.hw.j); $('h-jeu').disabled=o.hw.type==='ins'; $('h-len').value=fmt(o.hw.L); }
     if(pf){
       $('prof-text').hidden=!pf.text; fillGen(pf.gen);
       if(pf.text){ if(document.activeElement!==$('t-str')) $('t-str').value=pf.text.str; $('t-size').value=fmt(pf.text.size); fillFonts(pf.text.font); }
-      const side=Math.min(o.size[0],o.size[1])/2, max={r:side,rt:o.size[2],rb:o.size[2]};
-      for(const k of SLIDERS){ const v=pf[k]||0, sl=$('s-'+k); sl.max=Math.max(1,+max[k].toFixed(1)); if(document.activeElement!==sl) sl.value=v; $('f-'+k).value=fmt(v); }
+      for(const k of SLIDERS) showParam(k,o,pf[k]||0);
       $('f-style').value=pf.style;
       $('row-r').hidden=!hasCorners(pf);
-      const hs=$('s-hol'), hv=holVal(pf); hs.max=Math.max(1,+side.toFixed(1)); if(document.activeElement!==hs) hs.value=hv; $('f-hol').value=fmt(hv);
-      $('hm-cup').setAttribute('aria-pressed',holMode(pf)==='cup'); $('hm-thr').setAttribute('aria-pressed',holMode(pf)==='through');
+      showParam('hol',o,holVal(pf)); $('hm-fond').checked=holMode(pf)==='cup';
     }
     $('f-w').value=fmt(o.size[0]); $('f-d').value=fmt(o.size[1]); $('f-h').value=fmt(o.size[2]);
     $('f-x').value=fmt(o.pos[0]); $('f-y').value=fmt(o.pos[1]); $('f-z').value=fmt(b.min[2]);
@@ -1711,7 +1767,7 @@ function updateInspector(){
   $('b-paste').disabled=!clip.length;
   $('l-stl').textContent=T(n?'STL de la sélection':'STL de toute la scène');
 }
-function refresh(){ syncMeshes(); updateInspector(); autosave(); if(openPop&&openPop.id==='pop-repeat') previewRepeat(); }
+function refresh(){ syncMeshes(); updateInspector(); symUI(); autosave(); if(openPop&&openPop.id==='pop-repeat') previewRepeat(); }
 function editOne(fn){ const o=selected()[0]; if(!o) return; pushUndo(); fn(o); refresh(); }
 function editSel(fn){ const list=selected(); if(!list.length) return; pushUndo(); list.forEach(fn); refresh(); }
 
@@ -1722,12 +1778,15 @@ function bindParam(key){
     const o=selected()[0]; if(!o||o.kind!=='profile') return;
     if(!live){ pushUndo(); live=true; }
     const ok=applyProf(o,{...o.prof,[key]:v});
-    if(final){ live=false; if(!ok) toast('Ce réglage ne laisse plus de matière.'); refresh(); } else { syncMeshes(); nf.value=fmt(o.prof[key]||0); }
+    if(final){ live=false; if(!ok) toast('Ce réglage ne laisse plus de matière.'); refresh(); } else { syncMeshes(); showParam(key,o,o.prof[key]||0); }
   };
-  sl.addEventListener('input',()=>apply(+sl.value,false)); sl.addEventListener('change',()=>apply(+sl.value,true));
-  nf.addEventListener('change',()=>{ const v=num(nf.value); if(v===null||v<0){ updateInspector(); return; } apply(v*U(),true); });
+  const fromSl=final=>{ const o=selected()[0]; if(o) apply(+sl.value/100*capOf(o,key),final); };
+  sl.addEventListener('input',()=>fromSl(false)); sl.addEventListener('change',()=>fromSl(true));
+  nf.addEventListener('change',()=>{ const o=selected()[0], v=o?readParam(key,o,nf.value):null; if(v===null){ updateInspector(); return; } apply(v,true); });
 }
 SLIDERS.forEach(bindParam);
+$('u-pct').onclick=()=>{ RU='%'; try{ localStorage.setItem('3di-ru',RU); }catch(e){} updateInspector(); };
+$('u-mm').onclick=()=>{ RU='mm'; try{ localStorage.setItem('3di-ru',RU); }catch(e){} updateInspector(); };
 let genKind=null;
 function fillGen(gen){
   const box=$('insp-gen'); box.hidden=!gen; if(!gen){ return; }
@@ -1746,23 +1805,23 @@ function fillGen(gen){
     const o=selected()[0]; if(!o||o.kind!=='profile') return;
     if(!live){ pushUndo(); live=true; }
     const ok=setHol(o,holMode(o.prof),v);
-    if(final){ live=false; if(!ok) toast('Ce réglage ne laisse plus de matière.'); refresh(); } else { syncMeshes(); nf.value=fmt(v); }
+    if(final){ live=false; if(!ok) toast('Ce réglage ne laisse plus de matière.'); refresh(); } else { syncMeshes(); showParam('hol',o,v); }
   };
-  sl.addEventListener('input',()=>apply(+sl.value,false)); sl.addEventListener('change',()=>apply(+sl.value,true));
-  nf.addEventListener('change',()=>{ const v=num(nf.value); if(v===null||v<0){ updateInspector(); return; } apply(v*U(),true); });
-  /* changer de mode sur un objet plein pose d'emblée une épaisseur, pour que l'effet se voie */
-  const mode=m=>editOne(o=>{ const t=holVal(o.prof)||Math.min(2,Math.min(o.size[0],o.size[1])/4); if(!setHol(o,m,t)) toast('Ce réglage ne laisse plus de matière.'); });
-  $('hm-cup').onclick=()=>mode('cup'); $('hm-thr').onclick=()=>mode('through');
+  const fromSl=final=>{ const o=selected()[0]; if(o) apply(holWall(o,+sl.value),final); };
+  sl.addEventListener('input',()=>fromSl(false)); sl.addEventListener('change',()=>fromSl(true));
+  nf.addEventListener('change',()=>{ const o=selected()[0], v=o?readParam('hol',o,nf.value):null; if(v===null){ updateInspector(); return; } apply(v,true); });
+  $('hm-fond').onchange=e=>editOne(o=>{ if(!setHol(o,e.target.checked?'cup':'through',holVal(o.prof))) toast('Ce réglage ne laisse plus de matière.'); });
 }
 { const sl=$('s-rr'), nf=$('f-rr'); let live=false;
   const apply=(v,final)=>{
     const o=selected()[0]; if(!o||!o.shp) return;
     if(!live){ pushUndo(); live=true; }
     const ok=applyShp(o,{...o.shp,rr:v});
-    if(final){ live=false; if(!ok) toast('Ce réglage ne laisse plus de matière.'); refresh(); } else { syncMeshes(); nf.value=fmt(o.shp.rr||0); }
+    if(final){ live=false; if(!ok) toast('Ce réglage ne laisse plus de matière.'); refresh(); } else { syncMeshes(); showParam('rr',o,o.shp.rr||0); }
   };
-  sl.addEventListener('input',()=>apply(+sl.value,false)); sl.addEventListener('change',()=>apply(+sl.value,true));
-  nf.addEventListener('change',()=>{ const v=num(nf.value); if(v===null||v<0){ updateInspector(); return; } apply(v*U(),true); });
+  const fromSl=final=>{ const o=selected()[0]; if(o) apply(+sl.value/100*capOf(o,'rr'),final); };
+  sl.addEventListener('input',()=>fromSl(false)); sl.addEventListener('change',()=>fromSl(true));
+  nf.addEventListener('change',()=>{ const o=selected()[0], v=o?readParam('rr',o,nf.value):null; if(v===null){ updateInspector(); return; } apply(v,true); });
 }
 $('f-style').onchange=e=>editOne(o=>applyProf(o,{...o.prof,style:e.target.value}));
 { let live=false; const ts=$('t-str');
@@ -1800,6 +1859,42 @@ try{ if(stored('3di-dims')!=='0') $('insp-dims').open=true; $('insp-dims').addEv
 
 /* ---------- aperçus fantômes ---------- */
 const ghostGroup=new THREE.Group(); scene.add(ghostGroup);
+/* ---------- mode symétrie : le plateau est partagé en 2, 4 ou 8 parts autour de son centre ;
+   chaque objet est répété en miroir dans les autres parts, en direct. Les copies ne deviennent de vrais objets
+   qu'à l'export, ou quand on les fige. ---------- */
+const symGroup=new THREE.Group(); scene.add(symGroup);
+const SYMX={0:[],2:[[1,0]],4:[[1,0],[0,180],[1,180]],8:[[1,0],[0,90],[1,90],[0,180],[1,180],[0,270],[1,270]]};
+const symLineMat=new THREE.LineDashedMaterial({color:0x5ee6d8,dashSize:4,gapSize:3,transparent:true,opacity:.75});
+function symMatrices(){
+  const cx=S.plate[0]/2, cy=S.plate[1]/2, T1=new THREE.Matrix4().makeTranslation(cx,cy,0), T0=new THREE.Matrix4().makeTranslation(-cx,-cy,0);
+  return (SYMX[S.sym]||[]).map(([m,d])=>{ const g=new THREE.Matrix4().makeRotationZ(d*D2R); if(m) g.multiply(new THREE.Matrix4().makeScale(-1,1,1)); return T1.clone().multiply(g).multiply(T0); });
+}
+function syncSym(){
+  while(symGroup.children.length){ const c=symGroup.children.pop(); if(c.isLine) c.geometry.dispose(); }
+  if(!S.sym){ return; }
+  const [W,D]=S.plate, cx=W/2, cy=D/2, pts=[], L=(x0,y0,x1,y1)=>pts.push(x0,y0,.15,x1,y1,.15);
+  L(cx,0,cx,D); if(S.sym>=4) L(0,cy,W,cy);
+  if(S.sym===8){ const h=Math.min(W,D)/2; L(cx-h,cy-h,cx+h,cy+h); L(cx-h,cy+h,cx+h,cy-h); }
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));
+  const ln=new THREE.LineSegments(g,symLineMat); ln.computeLineDistances(); symLineMat.color.set(theme.accent); symGroup.add(ln);
+  const Ms=symMatrices();
+  for(const m of meshes.values()){ m.updateMatrix();
+    for(const G of Ms){ const c=new THREE.Mesh(m.geometry,m.material); c.matrixAutoUpdate=false; c.matrix.multiplyMatrices(G,m.matrix); c.renderOrder=m.renderOrder; symGroup.add(c); } }
+}
+/* les copies du mode symétrie, comme de vrais objets (pour l'export et pour « Figer ») */
+function symCopies(list){
+  if(!S.sym) return [];
+  const cx=S.plate[0]/2, cy=S.plate[1]/2, keep=S.nextId, out=[];
+  for(const [m,d] of SYMX[S.sym]){ const arr=list.map(o=>copyXform(o,!!m,d,cx,cy)); regid(arr); out.push(...arr); }
+  S.nextId=keep; return out;
+}
+function setSym(n){ S.sym=n; symUI(); markDirty(); refresh(); if(n) toast(T('Symétrie ×{0} : pose tes formes dans une part, les autres suivent.',n)); }
+function symUI(){ for(const b of $('symbtn').children) b.setAttribute('aria-pressed',+b.dataset.s===(S.sym||0)); $('b-sym').dataset.on=S.sym?1:0; $('sym-fix').disabled=!S.sym||!S.objs.length; }
+function symFix(){
+  if(!S.sym||!S.objs.length) return; pushUndo();
+  const made=symCopies(S.objs); for(const o of made) o.id=S.nextId++;
+  S.objs.push(...made); S.sym=0; symUI(); closePops(); refresh(); toast(T('Copies créées : {0}. Tout est sélectionné, prêt à grouper ou fusionner.',made.length)); S.sel=new Set(S.objs.map(o=>o.id)); refresh();
+}
 const ghostMat=new THREE.MeshBasicMaterial({color:0x2449e0,transparent:true,opacity:.34,depthWrite:false});
 function clearGhosts(){ while(ghostGroup.children.length) ghostGroup.remove(ghostGroup.children[0]); draw(); }
 function showGhosts(objs){
@@ -1834,13 +1929,14 @@ function mirrorApply(objs,k){ const b=boxOfMany(objs), c=(b.min[k]+b.max[k])/2; 
 /* répéter : l'aperçu suit les réglages tant que la bulle est ouverte */
 function repeatCopies(list){
   const type=$('r-type').value, n=Math.round(num($('r-n').value)||0), a=(num($('r-a').value)||0)*U(), b=(num($('r-b').value)||0)*U(), c=(num($('r-c').value)||0)*U();
-  if((type==='lin'||type==='circ') && (n<2||n>200)) return {err:'Le nombre doit être compris entre 2 et 200.'};
-  if(type==='lin' && !a && !b && !c) return {err:'Indique un pas sur au moins un axe.'};
+  if(n<2||n>200) return {err:'Le nombre doit être compris entre 2 et 200.'};
+  if(type==='lin' && !a && !b && !c) return {err:'Indique un écart sur au moins un axe.'};
   const made=[];
   const batch=fn=>{ const arr=list.map(fn); regid(arr); made.push(...arr); };
   if(type==='lin') for(let i=1;i<n;i++) batch(o=>{ const k=cloneObj(o); k.id=S.nextId++; k.pos[0]+=a*i; k.pos[1]+=b*i; k.pos[2]+=c*i; return k; });
-  else if(type==='circ') for(let i=1;i<n;i++) batch(o=>copyXform(o,false,360*i/n,a,b));
-  else for(const [m,d] of (type==='s4'?[[1,0],[0,180],[1,180]]:[[1,0],[0,90],[1,90],[0,180],[1,180],[0,270],[1,270]])) batch(o=>copyXform(o,!!m,d,a,b));
+  else{ /* cercle de diamètre a : l'objet d'origine reste en place, le centre est à sa droite */
+    const bb=boxOfMany(list), cx=(bb.min[0]+bb.max[0])/2+a/2, cy=(bb.min[1]+bb.max[1])/2;
+    for(let i=1;i<n;i++) batch(o=>copyXform(o,false,360*i/n,cx,cy)); }
   return {made};
 }
 function previewRepeat(){ const list=selected(); if(!list.length){ clearGhosts(); return; } const r=repeatCopies(list); showGhosts(r.made||[]); }
@@ -1850,7 +1946,19 @@ function repeatDo(){
   toast(T('Copies créées : {0}. Tout est sélectionné, prêt à grouper ou fusionner.',r.made.length));
 }
 $('r-type').onchange=()=>{ repeatUI(true); previewRepeat(); }; $('r-go').onclick=repeatDo;
-['r-n','r-a','r-b','r-c'].forEach(id=>$(id).addEventListener('input',previewRepeat));
+for(const b of $('symbtn').children) b.onclick=()=>setSym(+b.dataset.s);
+$('sym-fix').onclick=symFix;
+/* jauges et champs vont par paires ; en cercle, diamètre, écartement et nombre sont liés */
+function repeatLink(src){
+  if($('r-type').value!=='circ') return;
+  const D=num($('r-a').value)||0, per=Math.PI*D;
+  if(src==='n'){ const n=Math.max(2,Math.round(num($('r-n').value)||2)); $('r-b').value=fmt(+(per/n).toFixed(1)); }
+  else{ const e=Math.max(.5,num($('r-b').value)||1), n=Math.max(2,Math.min(200,Math.floor(per/e+1e-6))); $('r-n').value=n; }
+  for(const id of ['n','b']) $('rs-'+id).value=num($('r-'+id).value)||0;
+}
+['n','a','b','c'].forEach(id=>{ const f=$('r-'+id), sl=$('rs-'+id);
+  sl.addEventListener('input',()=>{ f.value=id==='n'?sl.value:fmt(+sl.value); repeatLink(id); previewRepeat(); });
+  f.addEventListener('input',()=>{ sl.value=num(f.value)||0; repeatLink(id); previewRepeat(); }); });
 
 /* ---------- bulles et menus ---------- */
 let openPop=null;
@@ -1930,7 +2038,7 @@ function spawnTile(parent,icon,labelFr,factory){
   el.addEventListener('pointerup',end); el.addEventListener('pointercancel',end);
   el.addEventListener('click',ev=>{ if(ev.detail===0){ const o=factory(); if(o) placeCentre(o); } });
 }
-for(const k in SHAPES) spawnTile($(SHAPES[k].cat==='mould'?'moulds':'shapes'),'<svg viewBox="0 0 34 34" aria-hidden="true">'+SHAPES[k].icon+'</svg>',SHAPES[k].name,makeShape(k));
+for(const k in SHAPES) if(!SHAPES[k].hide) spawnTile($(SHAPES[k].cat==='mould'?'moulds':'shapes'),'<svg viewBox="0 0 34 34" aria-hidden="true">'+SHAPES[k].icon+'</svg>',SHAPES[k].name,makeShape(k));
 spawnTile($('shapes'),svgIcon('text',''),'Texte',makeText);
 $('lib-cat').onchange=e=>{ const v=e.target.value; $('shapes').hidden=v!=='shapes'; $('moulds').hidden=v!=='mould'; $('hw-box').hidden=v!=='hardware'; $('comp-box').hidden=v!=='comp'; };
 CELLS.forEach((c,i)=>$('c-cell').add(new Option(c[0],i))); $('c-cell').value='1';

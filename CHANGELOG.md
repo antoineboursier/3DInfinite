@@ -3,6 +3,17 @@
 Chaque version officielle a sa section `## X.Y.Z`. Ce texte devient la note de la release GitHub
 et s'affiche dans la fenêtre « Mise à jour disponible » de l'appli. Reste court : une liste de ce qui change pour l'utilisateur.
 
+## 1.2.0
+
+- Arrondis en pourcentage, plafonnés pour ne pas déformer la pièce ; bascule % / mm, ou saisie directe « 30% » ou « 2mm »
+- « Creuser » en pourcentage (ou épaisseur de paroi en mm), avec une case « Fond »
+- Mode symétrie ×2, ×4, ×8 : le plateau est partagé en parts, ce qu'on pose dans l'une se répète en miroir dans les autres, en direct
+- Répétition avec jauges et aperçu ; en cercle : diamètre, écartement et nombre liés
+- Rotation : crans de 15° quand le curseur est dans l'anneau, degré par degré en dehors
+- Redimensionnement à la souris calé sur le pas de la grille
+- Poignées avec contour, flèches de rotation affinées, panneau allégé (pictos Taille / Position / Rotation)
+- Triangle posé à plat
+
 ## 1.1.0
 
 - Nouvelles formes : triangle, toit arrondi, polygone (nombre de côtés), étoile (branches, creux, arrondis), bulle de dialogue, engrenage (dents, module, alésage, jeu), MetaFillet
