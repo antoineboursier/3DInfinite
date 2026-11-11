@@ -21,25 +21,45 @@ Ouvrir le dossier dans n'importe quel éditeur (Antigravity, VS Code…). Le cod
 | `config.js` | Dépôt GitHub des mises à jour, adresse de la page de téléchargement |
 | `tools/build-app.mjs` | Assemble `src/` + bibliothèques locales dans `app/` (fonctionne hors ligne) |
 | `build/icon.svg` | Icône (le PNG est généré) |
-| `.github/workflows/release.yml` | Fabrique les installeurs à chaque nouvelle version |
+| `.github/workflows/release.yml` | Publie une version officielle (lancé à la main) |
+| `.github/workflows/site.yml` | Met le site en ligne |
+| `CHANGELOG.md` | Notes de chaque version |
+| `site/`, `brand/` | Site internet, logos et charte |
 
-## Publier une nouvelle version
+## Publier une version officielle
 
-1. Changer `"version"` dans `package.json` (ex. `1.0.0` → `1.0.1`) — ou `npm version patch --no-git-tag-version`.
-2. Commit, puis `git push` sur `main`.
+Pousser du code ne publie rien. Une version sort seulement quand tu le décides :
 
-GitHub Actions détecte la nouvelle version, crée la release et le tag `vX.Y.Z`, puis fabrique et y ajoute
-`3DInfinite-Setup-X.Y.Z.exe` (Windows) et `3DInfinite-X.Y.Z-arm64.dmg` / `-x64.dmg` (macOS) — environ 10 minutes.
-Suivi : onglet **Actions** du dépôt. Les installeurs apparaissent dans **Releases**. Une version déjà publiée n'est jamais refabriquée.
+1. Dans `package.json`, augmenter `"version"` (ex. `1.1.0` → `1.2.0`).
+2. Dans `CHANGELOG.md`, ajouter une section `## 1.2.0` avec la liste des nouveautés (ce texte sera la note de version).
+3. Commit et push sur `main`.
+4. Sur GitHub : onglet **Actions** → **Publier une version officielle** → **Run workflow**.
 
-## Mises à jour côté utilisateur
+Environ 10 minutes plus tard, la release `v1.2.0` existe avec ses notes et trois fichiers prêts à l'emploi :
+`3DInfinite-Setup.exe` (Windows), `3DInfinite-mac-arm64.dmg` (Mac Apple Silicon), `3DInfinite-mac-x64.dmg` (Mac Intel).
+Le workflow refuse de tourner si la version est déjà publiée ou si ses notes manquent dans `CHANGELOG.md`.
 
-Au lancement, l'appli lit la dernière release publiée sur GitHub. Si elle est plus récente, elle affiche
-« Mise à jour disponible : 3DInfinite X.Y.Z — Télécharger ? ». Le bouton ouvre le téléchargement de l'installeur
-(Windows : `.exe`, Mac : le `.dmg` qui correspond au processeur). Menu **Aide → Rechercher des mises à jour…** pour le faire à la main.
+## Ce que voient les utilisateurs
 
-Quand le site officiel existera : renseigner son adresse dans `config.js` (`downloadPage`), le bouton « Télécharger » y renverra.
-Le dépôt doit rester **public** pour que l'appli puisse lire les releases sans clé.
+Au lancement, l'appli lit la dernière release. Si elle est plus récente, une fenêtre affiche
+« Mise à jour disponible : 3DInfinite X.Y.Z », les nouveautés, et un bouton **Télécharger** :
+sous Windows il télécharge directement l'installeur, sous macOS il ouvre la page de téléchargement du site
+(réglable dans `config.js`, `updateTarget`). Menu **Aide → Rechercher des mises à jour…** pour le faire à la main.
+Le dépôt doit rester **public** pour que l'appli et le site puissent lire les releases.
+
+## Site internet
+
+Le dossier `site/` est une page statique (présentation, captures, téléchargement, FAQ, données structurées, `llms.txt`).
+Elle est mise en ligne par GitHub Pages à chaque modification de `site/` (workflow **Mettre le site en ligne**).
+Réglage à faire une fois : **Settings → Pages → Source : GitHub Actions**.
+Adresse : https://antoineboursier.github.io/3DInfinite/ — les boutons pointent toujours vers la dernière version officielle,
+et la page affiche son numéro et ses nouveautés. Si tu prends un nom de domaine : remplacer cette adresse dans
+`site/index.html`, `site/robots.txt`, `site/sitemap.xml`, `site/llms.txt` et `config.js`.
+
+## Charte et logos
+
+`brand/` contient les logos (icône, version horizontale claire et sombre, mot-symbole) et `brand/CHARTE.md` (couleurs, typographie, ton).
+`npm run brand` régénère les logos et les images du site à partir de `build/icon.svg`.
 
 ## Premier lancement (installeurs non signés)
 

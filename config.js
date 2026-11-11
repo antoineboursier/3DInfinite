@@ -2,8 +2,9 @@
 module.exports = {
   // Dépôt GitHub qui publie les installeurs (Releases)
   github: { owner: 'antoineboursier', repo: '3DInfinite' },
-  // Quand le site officiel existera : mettre son adresse de téléchargement ici
-  // (ex. 'https://3dinfinite.fr/telecharger'). Tant que c'est null, « Télécharger »
-  // lance directement l'installeur de la dernière version depuis GitHub.
-  downloadPage: null,
+  // Site officiel
+  site: 'https://antoineboursier.github.io/3DInfinite/',
+  // Où envoie le bouton « Télécharger » de la fenêtre de mise à jour, par système :
+  //   'installer' = télécharge directement l'installeur depuis GitHub ; 'site' = ouvre la page de téléchargement du site.
+  updateTarget: { win32: 'installer', darwin: 'site', linux: 'installer' },
 };

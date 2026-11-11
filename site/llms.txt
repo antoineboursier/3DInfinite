@@ -1,0 +1,22 @@
+# 3DInfinite
+
+> 3DInfinite (3DI) est un logiciel gratuit de modélisation 3D par assemblage de formes, orienté impression 3D. Il fonctionne sous Windows et macOS, hors ligne et sans compte. Ce n'est pas une CAO paramétrique.
+
+## Faits
+
+- Usage : dessiner des pièces à imprimer (boîtiers, supports, adaptateurs, cadres, pièces de rechange), en millimètres réels sur le plateau de l'imprimante
+- Principe : formes pleines et formes vides, groupes, fusion (union des pleins moins les vides)
+- Formes : boîte, cylindre, sphère, cône, pyramide, rampe, anneau, dôme, triangle, toit arrondi, polygone, étoile, bulle, engrenage, MetaFillet, texte, moulures
+- Réglages : rayon des angles, arêtes haute et basse arrondies ou chanfreinées, parois creuses, répétition, symétrie, alignement
+- Bibliothèques : trous de vis, écrous et inserts M2 à M8 ; logements de piles (AA, AAA, C, D, 18650, 21700, CR123A, CR2032, CR2025, CR2016, LR44, 9V) ; aimants (Ø3 à Ø20, blocs)
+- Formats : import STL et SVG ; export STL et 3MF (une pièce par couleur) ; projets en fichiers .3di
+- Plateaux préréglés : Elegoo Centauri Carbon, Bambu Lab A1 / A1 mini / P1 / X1, Prusa MK4 / MINI+, Creality Ender-3 V3 / K1, personnalisé
+- Langues : français, anglais
+- Prix : gratuit
+- Auteur : Antoine Boursier
+
+## Liens
+
+- [Site](https://antoineboursier.github.io/3DInfinite/)
+- [Téléchargement et notes de version](https://github.com/antoineboursier/3DInfinite/releases)
+- [Code source](https://github.com/antoineboursier/3DInfinite)

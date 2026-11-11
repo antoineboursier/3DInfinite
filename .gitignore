@@ -3,6 +3,9 @@
 !/.gitignore
 !/.github
 !/README.md
+!/CHANGELOG.md
+!/site
+!/brand
 !/package.json
 !/package-lock.json
 !/main.js

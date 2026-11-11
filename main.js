@@ -73,7 +73,7 @@ function buildMenu() {
   });
   const help = { label: t('Aide', 'Help'), submenu: [
     { label: t('Rechercher des mises à jour…', 'Check for updates…'), click: () => checkForUpdates(true) },
-    { label: t('Page du projet', 'Project page'), click: () => shell.openExternal(`https://github.com/${cfg.github.owner}/${cfg.github.repo}`) },
+    { label: t('Site de 3DInfinite', '3DInfinite website'), click: () => shell.openExternal(cfg.site) },
     ...(isMac ? [] : [{ type: 'separator' }, { label: t('À propos de 3DInfinite', 'About 3DInfinite'), click: () =>
       dialog.showMessageBox(win, { type: 'info', title: '3DInfinite', message: '3DInfinite', detail: t('Version ', 'Version ') + app.getVersion(), icon: path.join(__dirname, 'build', 'icon.png') }) }]),
   ] };
@@ -164,11 +164,15 @@ async function checkForUpdates(manual) {
     const latest = String(rel.tag_name || '').replace(/^v/i, '');
     if (latest && newer(latest, app.getVersion())) {
       const asset = pickAsset(rel.assets || []);
-      const url = cfg.downloadPage || (asset && asset.browser_download_url) || rel.html_url;
+      const direct = (asset && asset.browser_download_url) || rel.html_url;
+      const url = (cfg.updateTarget || {})[process.platform] === 'site' && cfg.site ? cfg.site + '#telecharger' : direct;
+      // notes de version (CHANGELOG) : texte simple, raccourci
+      const notes = String(rel.body || '').replace(/\r/g, '').replace(/^#+\s*/gm, '').replace(/\*\*|`/g, '').replace(/^\s*[-*]\s+/gm, '• ').trim();
+      const short = notes.length > 700 ? notes.slice(0, 700).replace(/\s+\S*$/, '') + '…' : notes;
       const r = await dialog.showMessageBox(win, { type: 'info', defaultId: 0, cancelId: 1, noLink: true, title: '3DInfinite',
         buttons: [t('Télécharger', 'Download'), t('Plus tard', 'Later')],
         message: t(`Mise à jour disponible : 3DInfinite ${latest}`, `Update available: 3DInfinite ${latest}`),
-        detail: t(`Vous utilisez la version ${app.getVersion()}. Télécharger la nouvelle version ?`, `You are using version ${app.getVersion()}. Download the new version?`) });
+        detail: (short ? short + '\n\n' : '') + t(`Vous utilisez la version ${app.getVersion()}. Télécharger la nouvelle version ?`, `You are using version ${app.getVersion()}. Download the new version?`) });
       if (r.response === 0) shell.openExternal(url);
     } else if (manual) {
       dialog.showMessageBox(win, { type: 'info', title: '3DInfinite', message: t('Vous utilisez la dernière version.', 'You are up to date.'), detail: 'v' + app.getVersion() });

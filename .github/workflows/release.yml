@@ -1,22 +1,20 @@
-name: Publier les installeurs
+name: Publier une version officielle
 
-# Publier une nouvelle version = changer "version" dans package.json puis pousser sur main.
-# Si la release de cette version n'existe pas encore, elle est créée (avec son tag) et les installeurs
-# Windows (.exe) et macOS (.dmg) y sont ajoutés. Bouton « Run workflow » possible pour un premier essai.
+# Publication décidée à la main : onglet Actions → « Publier une version officielle » → Run workflow.
+# Rien ne se publie tout seul quand on pousse du code.
+# Le workflow lit la version dans package.json et les notes dans CHANGELOG.md, fabrique l'installeur Windows (.exe)
+# et les deux .dmg macOS, puis crée la release d'un seul coup (les utilisateurs ne sont prévenus qu'une fois tout prêt).
 on:
-  push:
-    branches: [main]
-    paths: ['package.json']
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  release:
+  check:
     runs-on: ubuntu-latest
     outputs:
-      create: ${{ steps.v.outputs.create }}
+      version: ${{ steps.v.outputs.version }}
     steps:
       - uses: actions/checkout@v4
       - id: v
@@ -25,18 +23,15 @@ jobs:
         run: |
           V=$(node -p "require('./package.json').version")
           if gh release view "v$V" >/dev/null 2>&1; then
-            echo "La version v$V existe déjà : rien à publier."
-            echo "create=no" >> "$GITHUB_OUTPUT"
-          else
-            gh release create "v$V" --target "$GITHUB_SHA" --title "3DInfinite $V" --generate-notes
-            echo "create=yes" >> "$GITHUB_OUTPUT"
+            echo "::error::La version v$V est déjà publiée. Augmente \"version\" dans package.json et ajoute ses notes dans CHANGELOG.md."; exit 1
           fi
+          node tools/release-notes.mjs "$V" > /dev/null
+          echo "version=$V" >> "$GITHUB_OUTPUT"
 
   build:
-    needs: release
-    if: needs.release.outputs.create == 'yes'
+    needs: check
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         include:
           - os: windows-latest
@@ -52,8 +47,31 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build:app
-      - name: Fabriquer et publier
-        run: npx electron-builder ${{ matrix.flag }} --publish always
+      - run: npx electron-builder ${{ matrix.flag }} --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installeurs-${{ matrix.os }}
+          path: |
+            release/*.exe
+            release/*.dmg
+          if-no-files-found: error
+
+  publish:
+    needs: [check, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+      - name: Créer la release avec ses notes et ses installeurs
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_IDENTITY_AUTO_DISCOVERY: false
+          V: ${{ needs.check.outputs.version }}
+        run: |
+          node tools/release-notes.mjs "$V" > notes.md
+          ls -la out
+          gh release create "v$V" out/* --target "$GITHUB_SHA" --title "3DInfinite $V" --notes-file notes.md --latest

@@ -1,7 +1,7 @@
 {
   "name": "3dinfinite",
   "productName": "3DInfinite",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "3DInfinite — modélisation 3D simple pour l'impression 3D",
   "homepage": "https://github.com/antoineboursier/3DInfinite",
   "repository": {
@@ -17,7 +17,8 @@
     "start": "npm run build:app && electron .",
     "dist": "npm run build:app && electron-builder",
     "dist:win": "npm run build:app && electron-builder --win",
-    "dist:mac": "npm run build:app && electron-builder --mac"
+    "dist:mac": "npm run build:app && electron-builder --mac",
+    "brand": "node tools/make-brand.mjs"
   },
   "devDependencies": {
     "@fontsource/inter": "^5.3.0",
@@ -53,14 +54,6 @@
         "role": "Editor"
       }
     ],
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "antoineboursier",
-        "repo": "3DInfinite",
-        "releaseType": "release"
-      }
-    ],
     "win": {
       "target": [
         {
@@ -70,7 +63,7 @@
           ]
         }
       ],
-      "artifactName": "3DInfinite-Setup-${version}.${ext}"
+      "artifactName": "3DInfinite-Setup.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -92,14 +85,14 @@
       "identity": "-",
       "hardenedRuntime": false,
       "gatekeeperAssess": false,
-      "artifactName": "3DInfinite-${version}-${arch}.${ext}"
+      "artifactName": "3DInfinite-mac-${arch}.${ext}"
     },
     "linux": {
       "target": [
         "AppImage"
       ],
       "category": "Graphics",
-      "artifactName": "3DInfinite-${version}.${ext}"
+      "artifactName": "3DInfinite.${ext}"
     }
   }
 }

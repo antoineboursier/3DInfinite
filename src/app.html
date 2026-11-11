@@ -213,6 +213,7 @@ summary{cursor:pointer;font-weight:600;font-size:12.5px;margin-bottom:8px}
               </div>
               <div class="acts"><button class="btn sm" id="t-local" data-t="Polices du PC"></button><button class="btn sm" id="t-file" data-t="Fichier de police"></button></div>
             </div>
+            <div class="row two" id="insp-gen" hidden></div>
             <div class="sl" id="row-r"><span data-t="Angles"></span><input type="range" id="s-r" min="0" step="0.1"><input id="f-r" inputmode="decimal" data-tt="Rayon des angles du profil"></div>
             <div class="sl"><span data-t="Arête haute"></span><input type="range" id="s-rt" min="0" step="0.1"><input id="f-rt" inputmode="decimal" data-tt="Rayon de l'arête du dessus"></div>
             <div class="sl"><span data-t="Arête basse"></span><input type="range" id="s-rb" min="0" step="0.1"><input id="f-rb" inputmode="decimal" data-tt="Rayon de l'arête du dessous"></div>
@@ -272,8 +273,17 @@ summary{cursor:pointer;font-weight:600;font-size:12.5px;margin-bottom:8px}
 
   <aside class="lib">
     <select class="wide libsel" id="lib-cat" data-tt="Catégorie">
-      <option value="shapes" data-t="Formes"></option><option value="hardware" data-t="Visserie"></option></select>
+      <option value="shapes" data-t="Formes"></option><option value="mould" data-t="Moulures"></option><option value="hardware" data-t="Visserie"></option><option value="comp" data-t="Piles et aimants"></option></select>
     <div class="tiles" id="shapes"></div>
+    <div class="tiles" id="moulds" hidden></div>
+    <div id="comp-box" hidden>
+      <div class="row two">
+        <label class="fld"><span data-t="Pile"></span><select id="c-cell"></select></label>
+        <label class="fld"><span data-t="Aimant"></span><select id="c-mag"></select></label>
+      </div>
+      <div class="row two"><label class="fld"><span data-t="Jeu"></span><input id="c-jeu" inputmode="decimal" value="0,2"></label></div>
+      <div class="tiles" id="comps"></div>
+    </div>
     <div id="hw-box" hidden>
       <div class="row two">
         <label class="fld"><span data-t="Taille"></span><select id="v-size"></select></label>
@@ -318,6 +328,10 @@ summary{cursor:pointer;font-weight:600;font-size:12.5px;margin-bottom:8px}
     <label class="fld"><span>Z</span><input id="p-z" inputmode="decimal"></label>
   </div>
   <label class="fld"><span data-t="Unité"></span><select id="p-unit"><option value="mm">mm</option><option value="cm">cm</option></select></label>
+  <div class="row two" style="margin:8px 0 0;align-items:end">
+    <label class="fld"><span data-t="Couleur de la grille"></span><input type="color" id="p-grid" style="width:100%;height:32px;padding:2px"></label>
+    <button class="btn sm" id="p-grid0" data-t="Par défaut"></button>
+  </div>
 </div>
 <div class="panel pop" id="pop-help" hidden style="width:290px"><ul class="help" id="help"></ul></div>
 <input type="file" id="in-stl" accept=".stl" multiple hidden>
@@ -383,8 +397,35 @@ const SHAPES = {
             build:()=>Manifold.revolve(CrossSection.circle(3,64).translate([7,0]),160)},
   dome:    {name:'Dôme',      icon:'<path d="M5 22a12 12 0 0124 0"/><ellipse cx="17" cy="22" rx="12" ry="4.5"/>',
             build:()=>Manifold.sphere(10,128).intersect(Manifold.cube([20,20,10]).translate([-10,-10,0]))},
+  tri:     {name:'Triangle',  icon:'<path d="M12 6L3 24l10 6 18-8-9-16z"/><path d="M12 6l10 0M3 24l18-2M22 6l-1 16"/>',
+            sec:[[-10,-8.66],[10,-8.66],[0,8.66]], build:()=>lay([SHAPES.tri.sec],20)},
+  roof:    {name:'Toit arrondi', icon:'<path d="M4 24a8 8 0 0116 0z"/><path d="M12 16l10-5a8 8 0 018 8l-10 5M4 24l10-5"/>',
+            sec:Array.from({length:97},(_,i)=>[10*Math.cos(Math.PI*i/96),10*Math.sin(Math.PI*i/96)]), build:()=>lay([SHAPES.roof.sec],20)},
+  poly:    {name:'Polygone',  icon:'<path d="M17 4l11 6.5v13L17 30 6 23.5v-13z"/>', gen:{k:'poly',n:6}, h:20},
+  star:    {name:'Étoile',    icon:'<path d="M17 4l3.8 8.4 9.2 1-6.9 6.2 2 9L17 24l-8.1 4.6 2-9L4 13.4l9.2-1z"/>', gen:{k:'star',n:5,inner:45,rt:0,ri:0}, h:8},
+  bubble:  {name:'Bulle',     icon:'<path d="M8 6h18a4 4 0 014 4v9a4 4 0 01-4 4H16l-6 6v-6H8a4 4 0 01-4-4v-9a4 4 0 014-4z"/>', gen:{k:'bubble',c:50,tp:20,ts:40}, h:5},
+  gear:    {name:'Engrenage', icon:'<circle cx="17" cy="17" r="3.5"/><path d="M15 4h4l.8 3.6 3.2 1.4 3.2-2 2.8 2.8-2 3.2 1.4 3.2L32 17v2l-3.6.8-1.4 3.2 2 3.2-2.8 2.8-3.2-2-3.2 1.4L19 32h-4l-.8-3.6-3.2-1.4-3.2 2L5 26.200l2-3.200-1.400-3.200L2 19v-2l3.600-.800L7 13 5 9.800 7.800 7l3.200 2 3.200-1.400z" transform="translate(1.7 1.200) scale(.9)"/>', gen:{k:'gear',z:16,m:1.5,bore:5,j:0.1}, h:8},
+  fillet:  {name:'MetaFillet', icon:'<path d="M5 28V8c0 11 9 20 20 20z"/><path d="M5 8l5-3c0 11 9 20 20 20l-5 3M5 28l5-3"/>',
+            build:()=>{ const a=CrossSection.square([10,10]), c=CrossSection.circle(10,160).translate([10,10]), d=a.subtract(c); a.delete(); c.delete(); const m=Manifold.extrude(d,20,0,0,[1,1],true).rotate([90,0,0]); d.delete(); return m; }},
+  m_quart: {name:'Quart-de-rond', cat:'mould', mp:P=>P.to(0,0).to(10,0).ell(0,0,10,10,0,90)},
+  m_demi:  {name:'Demi-rond', cat:'mould', mp:P=>P.to(0,0).ell(0,6,6,6,-90,90)},
+  m_dou:   {name:'Doucine',   cat:'mould', mp:P=>P.to(0,0).to(10,0).to(10,2).ell(6,2,4,8,0,90).ell(6,18,4,8,270,180).to(2,20).to(0,20)},
+  m_cadre: {name:'Cadre',     cat:'mould', mp:P=>P.to(0,0).to(12,0).to(12,4).to(10,4).ell(10,20,5,16,270,180).to(7,20).ell(7,23,3,3,-90,90).to(4,26).to(4,30).to(0,30)},
+  m_plin:  {name:'Chambranle', cat:'mould', mp:P=>P.to(0,0).to(9,0).to(9,6).to(7,6).to(7,10).ell(7,20,7,10,-90,90).to(7,34).to(5,34).ell(5,38,3,4,270,180).to(2,40).to(0,40)},
+  m_corn:  {name:'Corniche',  cat:'mould', mp:P=>P.to(0,0).to(10,0).to(10,5).to(8,5).ell(8,25,5,20,270,180).to(3,27).to(1.5,27).to(1.5,30).to(0,30)},
 };
-for(const k in SHAPES) SHAPES[k].base = make(SHAPES[k].build);
+/* un contour 2D couché : sa coupe est verticale, sa longueur suit Y */
+function lay(polys,len){ const cs=new CrossSection(polys), m=Manifold.extrude(cs,len,0,0,[1,1],true).rotate([90,0,0]); cs.delete(); return m; }
+/* petit traceur de coupes de moulures : segments droits et arcs d'ellipse (angles en degrés) */
+function pathOf(fn){ const pts=[], P={ to(x,y){ const l=pts[pts.length-1]; if(!l||Math.hypot(l[0]-x,l[1]-y)>1e-6) pts.push([x,y]); return P; },
+  ell(cx,cy,rx,ry,a0,a1){ const n=Math.max(6,Math.ceil(Math.abs(a1-a0)/4)); for(let i=0;i<=n;i++){ const a=(a0+(a1-a0)*i/n)*Math.PI/180; P.to(cx+rx*Math.cos(a),cy+ry*Math.sin(a)); } return P; } };
+  fn(P); return pts; }
+for(const k in SHAPES){ const sh=SHAPES[k]; if(!sh.mp) continue; const pts=pathOf(sh.mp);
+  /* la moulure est posée à plat, dos contre le plateau, prête pour un cadre : longueur en X, largeur en Y, relief en Z */
+  sh.build=()=>{ const cs=new CrossSection([pts]), e=Manifold.extrude(cs,80,0,0,[1,1],true), m=e.transform([0,0,1,0, 0,-1,0,0, 1,0,0,0, 0,0,0,1]); cs.delete(); e.delete(); return m; };
+  const xs=pts.map(q=>q[0]), ys=pts.map(q=>q[1]), w=Math.max(...xs), h=Math.max(...ys), sc=22/Math.max(w,h), ox=17-w*sc/2, oy=17+h*sc/2;
+  sh.icon='<path d="M'+pts.map(q=>(ox+q[0]*sc).toFixed(1)+' '+(oy-q[1]*sc).toFixed(1)).join('L')+'z"/>'; }
+for(const k in SHAPES) if(SHAPES[k].build) SHAPES[k].base = make(SHAPES[k].build);
 /* boîte et cylindre sont des profils extrudés : ils acceptent les arrondis */
 const PROF0={fill:'NonZero',sx:1,sy:1,h:20,r:0,rt:0,rb:0,style:'round',outline:0,text:null};
 SHAPES.box.prof={...PROF0, src:[[[-10,-10],[10,-10],[10,10],[-10,10]]]};
@@ -408,6 +449,84 @@ function settle(o){
 }
 for(const k of ['box','cyl']){ SHAPES[k].oldTris=SHAPES[k].base.tris.length; SHAPES[k].base=profBase(SHAPES[k].prof); }
 
+/* formes paramétriques : le contour est recalculé à partir de quelques réglages (prof.gen) */
+/* arrondit chaque sommet d'un polygone ; f[i] entre 0 et 1 = part de la demi-arête consommée par l'arrondi */
+function filletPoly(pts,f){
+  const n=pts.length, out=[];
+  for(let i=0;i<n;i++){
+    const a=pts[(i+n-1)%n], b=pts[i], c=pts[(i+1)%n], fi=f[i]||0;
+    const ux=a[0]-b[0], uy=a[1]-b[1], vx=c[0]-b[0], vy=c[1]-b[1], lu=Math.hypot(ux,uy), lv=Math.hypot(vx,vy);
+    const d=fi*.5*Math.min(lu,lv); if(d<1e-4){ out.push(b); continue; }
+    const t1=[b[0]+ux/lu*d,b[1]+uy/lu*d], t2=[b[0]+vx/lv*d,b[1]+vy/lv*d];
+    const ang=Math.acos(Math.max(-1,Math.min(1,(ux*vx+uy*vy)/(lu*lv)))), r=d*Math.tan(ang/2);
+    let bx=ux/lu+vx/lv, by=uy/lu+vy/lv; const bl=Math.hypot(bx,by); if(bl<1e-9){ out.push(b); continue; }
+    const dc=Math.hypot(d,r), cx=b[0]+bx/bl*dc, cy=b[1]+by/bl*dc;
+    let a0=Math.atan2(t1[1]-cy,t1[0]-cx), a1=Math.atan2(t2[1]-cy,t2[0]-cx), da=a1-a0;
+    while(da>Math.PI) da-=2*Math.PI; while(da<-Math.PI) da+=2*Math.PI;
+    const k=Math.max(2,Math.ceil(Math.abs(da)/(Math.PI/36)));
+    for(let j=0;j<=k;j++){ const t=a0+da*j/k; out.push([cx+r*Math.cos(t),cy+r*Math.sin(t)]); }
+  }
+  return out;
+}
+const GEN={
+  poly(g){ const n=Math.max(3,Math.min(64,Math.round(g.n))); return [Array.from({length:n},(_,i)=>{ const a=-Math.PI/2+Math.PI/n+2*Math.PI*i/n; return [10*Math.cos(a),10*Math.sin(a)]; })]; },
+  star(g){ const n=Math.max(3,Math.min(40,Math.round(g.n))), ri=10*Math.max(5,Math.min(95,g.inner))/100, pts=[], f=[];
+    for(let i=0;i<n;i++){ const a=Math.PI/2+2*Math.PI*i/n, b=a+Math.PI/n; pts.push([10*Math.cos(a),10*Math.sin(a)]); f.push((g.rt||0)/100); pts.push([ri*Math.cos(b),ri*Math.sin(b)]); f.push((g.ri||0)/100); }
+    return [filletPoly(pts,f)]; },
+  bubble(g){ const W=30,H=20, cr=Math.max(0,Math.min(100,g.c))/100*H/2, tw=W*.1+W*.3*Math.max(0,Math.min(100,g.ts))/100, tl=tw*1.1,
+      cx=-W/2+cr+tw/2+(W-2*cr-tw)*Math.max(0,Math.min(100,g.tp))/100, pts=[];
+    const add=(x,y)=>{ const l=pts[pts.length-1]; if(!l||Math.hypot(l[0]-x,l[1]-y)>1e-6) pts.push([x,y]); };
+    const arc=(ox,oy,a0)=>{ if(cr<1e-4){ add(ox,oy); return; } for(let i=0;i<=12;i++){ const a=(a0+90*i/12)*Math.PI/180; add(ox+cr*Math.cos(a),oy+cr*Math.sin(a)); } };
+    add(-W/2+cr,-H/2); add(cx-tw/2,-H/2); add(cx-tw*.6,-H/2-tl); add(cx+tw/2,-H/2); add(W/2-cr,-H/2);
+    arc(W/2-cr,-H/2+cr,-90); arc(W/2-cr,H/2-cr,0); arc(-W/2+cr,H/2-cr,90); arc(-W/2+cr,-H/2+cr,180);
+    const l=pts[pts.length-1]; if(Math.hypot(l[0]-pts[0][0],l[1]-pts[0][1])<1e-6) pts.pop();
+    return [pts]; },
+  /* denture droite en développante de cercle, angle de pression 20° : deux roues de même module engrènent */
+  gear(g){ const z=Math.max(6,Math.min(200,Math.round(g.z))), m=Math.max(.2,g.m), al=20*Math.PI/180, rp=m*z/2, rb=rp*Math.cos(al), ra=rp+m, rf=Math.max(rp-1.25*m,m*.5),
+      s=Math.max(m*.3,Math.PI*m/2-(g.j||0)), inv=a=>Math.tan(a)-a, psi=r=>Math.max(0,s/(2*rp)+inv(al)-inv(Math.acos(Math.min(1,rb/r)))), r0=Math.max(rb,rf), pts=[], N=9;
+    for(let i=0;i<z;i++){ const th=2*Math.PI*i/z, fl=[];
+      for(let k=0;k<=N;k++){ const r=r0+(ra-r0)*k/N; fl.push([r,psi(r)]); }
+      if(rf<rb-1e-6) pts.push([rf*Math.cos(th-fl[0][1]),rf*Math.sin(th-fl[0][1])]);
+      for(const [r,p] of fl) pts.push([r*Math.cos(th-p),r*Math.sin(th-p)]);
+      for(let k=N;k>=0;k--){ const [r,p]=fl[k]; if(p>1e-6||k<N) pts.push([r*Math.cos(th+p),r*Math.sin(th+p)]); }
+      if(rf<rb-1e-6) pts.push([rf*Math.cos(th+fl[0][1]),rf*Math.sin(th+fl[0][1])]);
+    }
+    const out=[pts], br=(g.bore||0)/2;
+    if(br>.1&&br<rf-.5) out.push(Array.from({length:64},(_,i)=>{ const a=-2*Math.PI*i/64; return [br*Math.cos(a),br*Math.sin(a)]; }));
+    return out; },
+};
+/* réglages affichés dans le panneau : [clé, libellé, min, max, pas, longueur en mm ?] */
+const GENUI={
+  poly:[['n','Côtés',3,64,1]],
+  star:[['n','Branches',3,40,1],['inner','Creux %',5,95,1],['rt','Pointes arrondies %',0,100,1],['ri','Creux arrondis %',0,100,1]],
+  bubble:[['c','Coins %',0,100,1],['tp','Position de la queue %',0,100,1],['ts','Taille de la queue %',0,100,1]],
+  gear:[['z','Dents',6,200,1],['m','Module',.2,20,.1,1],['bore','Alésage',0,200,.1,1],['j','Jeu',0,2,.05,1]],
+};
+function setGen(o,key,val){
+  const gen={...o.prof.gen,[key]:val}, prof={...o.prof,gen,src:GEN[gen.k](gen)};
+  if(gen.k==='gear'){ prof.sx=1; prof.sy=1; }   /* un engrenage garde ses cotes réelles : diamètre primitif = module × dents */
+  return applyProf(o,prof);
+}
+for(const k in SHAPES){ const sh=SHAPES[k]; if(!sh.gen) continue; sh.prof={...PROF0,h:sh.h,gen:sh.gen,src:GEN[sh.gen.k](sh.gen)}; sh.base=profBase(sh.prof); }
+for(const k of ['tri','roof']) SHAPES[k].shp={k,rr:0};
+{ const g=GEN.gear({z:10,m:2,bore:7,j:0}), sc=13/12; SHAPES.gear.icon=g.map(c=>'<path d="M'+c.map(q=>(17+q[0]*sc).toFixed(1)+' '+(17-q[1]*sc).toFixed(1)).join('L')+'z"/>').join(''); }
+
+/* ---------- piles et aimants : des logements aux cotes standard (diamètre × longueur, ou L × l × h) ---------- */
+const CELLS=[['AAA',10.5,44.5],['AA',14.5,50.5],['C',26.2,50],['D',34.2,61.5],['18650',18.6,65.2],['21700',21.2,70.2],['CR123A',17,34.5],
+  ['CR2032',20,3.2,1],['CR2025',20,2.5,1],['CR2016',20,1.6,1],['LR44',11.6,5.4,1],['9V',26.5,17.5,48.5,2]];
+const MAGNETS=[['Ø3 × 1',3,1],['Ø4 × 2',4,2],['Ø5 × 2',5,2],['Ø5 × 3',5,3],['Ø6 × 2',6,2],['Ø6 × 3',6,3],['Ø8 × 2',8,2],['Ø8 × 3',8,3],['Ø10 × 2',10,2],['Ø10 × 3',10,3],['Ø10 × 5',10,5],
+  ['Ø12 × 3',12,3],['Ø15 × 3',15,3],['Ø20 × 3',20,3],['10 × 5 × 2',10,5,2,2],['20 × 10 × 2',20,10,2,2],['20 × 10 × 5',20,10,5,2]];
+function compJeu(){ const v=num($('c-jeu').value); return v===null||v<0?0:v*U(); }
+function compBase(spec,j,lying){
+  return make(()=>{
+    if(spec[4]===2) return Manifold.cube([spec[1]+2*j,spec[2]+2*j,spec[3]+2*j],true);
+    const r=spec[1]/2+j, L=spec[2]+2*j, c=Manifold.cylinder(L,r,r,96,true);
+    if(!lying) return c; const m=c.rotate([0,90,0]); c.delete(); return m; });
+}
+const makeCell=()=>{ const sp=CELLS[+$('c-cell').value], box=sp.length===5; const spec=box?[sp[0],sp[1],sp[2],sp[3],2]:sp;
+  return newObj(compBase(spec,compJeu(),!box&&sp[3]!==1),label('Pile '+sp[0]),{hole:true}); };
+const makeMagnet=()=>{ const sp=MAGNETS[+$('c-mag').value]; return newObj(compBase(sp,compJeu(),false),label('Aimant '+sp[0]),{hole:true}); };
+
 /* cône, pyramide, rampe, dôme : les arêtes vives s'arrondissent par « ouverture » (on érode d'une bille, puis on regonfle).
    Cône et dôme sont des révolutions : l'ouverture se fait sur leur coupe, c'est instantané. Sphère et anneau n'ont aucune arête vive. */
 for(const k of ['cone','pyramid','wedge','dome']){ SHAPES[k].oldTris=SHAPES[k].base.tris.length; SHAPES[k].shp={k,rr:0}; }
@@ -424,6 +543,11 @@ function shapeSolid(k,size,shp){
     const big=Math.max(R,H)*4+10, half=op.intersect(CrossSection.square([big,big*2]).translate([0,-big])); op.delete();
     const rv=Manifold.revolve(half,160); half.delete();
     m=rv.scale([1,size[1]/size[0],1]); rv.delete();
+  }else if(rr>0 && SHAPES[k].sec){
+    /* triangle et toit : la coupe est arrondie puis extrudée avec ses arêtes de bout arrondies, comme un profil */
+    const fx=size[0]/ref[0], fz=size[2]/ref[2], src=[SHAPES[k].sec.map(q=>[q[0]*fx,q[1]*fz])];
+    const pm=G.profileSolid({...PROF0,src,h:size[1],r:rr,rt:rr,rb:rr}); if(!pm) return null;
+    m=pm.rotate([90,0,0]); pm.delete();
   }else{
     const b=SHAPES[k].build(); m=b.scale([size[0]/ref[0],size[1]/ref[1],size[2]/ref[2]]); b.delete();
     if(rr>0){
@@ -1080,7 +1204,8 @@ let dirty=true; const draw=()=>{dirty=true};
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 let theme={};
 function readTheme(){
-  theme={scene:css('--scene'),plate:css('--plate'),grid:css('--grid'),strong:css('--grid-strong'),handle:css('--handle'),hole:css('--hole'),accent:css('--select')};
+  const gc=stored('3di-grid'), okc=gc&&/^#[0-9a-f]{6}$/i.test(gc);
+  theme={scene:css('--scene'),plate:css('--plate'),grid:okc?gc:css('--grid'),strong:okc?'#'+new THREE.Color(gc).lerp(new THREE.Color('#ffffff'),.35).getHexString():css('--grid-strong'),handle:css('--handle'),hole:css('--hole'),accent:css('--select')};
   scene.background=null; handle.material.color.set(theme.handle);
   gz.size.forEach(m=>m.material.color.set(theme.handle)); gz.rot.forEach(g=>g.userData.mat.color.set(theme.accent));
   buildPlate(); for(const m of meshes.values()) m.userData.sig=''; syncMeshes();
@@ -1388,6 +1513,11 @@ canvas.addEventListener('pointerup',endDrag); canvas.addEventListener('pointerca
 
 /* ---------- langues : le français sert de clé, l'anglais est une table ---------- */
 const EN={
+  'Triangle':'Triangle','Toit arrondi':'Round roof','Polygone':'Polygon','Étoile':'Star','Bulle':'Speech bubble','Engrenage':'Gear','MetaFillet':'MetaFillet',
+  'Quart-de-rond':'Quarter round','Demi-rond':'Half round','Doucine':'Ogee','Cadre':'Frame','Chambranle':'Casing','Corniche':'Cornice',
+  'Moulures':'Mouldings','Piles et aimants':'Batteries and magnets','Pile':'Battery','Aimant':'Magnet','Couleur de la grille':'Grid colour','Par défaut':'Default',
+  'Côtés':'Sides','Branches':'Points','Creux %':'Inner radius %','Pointes arrondies %':'Rounded tips %','Creux arrondis %':'Rounded valleys %',
+  'Coins %':'Corners %','Position de la queue %':'Tail position %','Taille de la queue %':'Tail size %','Dents':'Teeth','Module':'Module','Alésage':'Bore',
   'Sans titre':'Untitled','Nouveau projet.':'New project.','Session précédente restaurée (non enregistrée).':'Previous session restored (unsaved).',
   'Arrondi':'Rounding','Rayon des arêtes vives':'Radius of the sharp edges',"Forme lisse : pas d'arête à arrondir.":'Smooth shape: no edge to round.',
   'Grouper : les objets bougent ensemble, chacun reste modifiable (Ctrl+G)':'Group: objects move together, each stays editable (Ctrl+G)',
@@ -1561,7 +1691,7 @@ function updateInspector(){
     if(o.kind==='shape'&&o.shp){ const sl=$('s-rr'); sl.max=Math.max(1,+(Math.min(o.size[0],o.size[1],o.size[2])/3).toFixed(1)); if(document.activeElement!==sl) sl.value=o.shp.rr||0; $('f-rr').value=fmt(o.shp.rr||0); }
     if(o.kind==='hw'){ $('h-size').value=o.hw.size; $('h-jeu').value=fmt(o.hw.j); $('h-jeu').disabled=o.hw.type==='ins'; $('h-len').value=fmt(o.hw.L); }
     if(pf){
-      $('prof-text').hidden=!pf.text;
+      $('prof-text').hidden=!pf.text; fillGen(pf.gen);
       if(pf.text){ if(document.activeElement!==$('t-str')) $('t-str').value=pf.text.str; $('t-size').value=fmt(pf.text.size); fillFonts(pf.text.font); }
       const side=Math.min(o.size[0],o.size[1])/2, max={r:side,rt:o.size[2],rb:o.size[2]};
       for(const k of SLIDERS){ const v=pf[k]||0, sl=$('s-'+k); sl.max=Math.max(1,+max[k].toFixed(1)); if(document.activeElement!==sl) sl.value=v; $('f-'+k).value=fmt(v); }
@@ -1598,6 +1728,18 @@ function bindParam(key){
   nf.addEventListener('change',()=>{ const v=num(nf.value); if(v===null||v<0){ updateInspector(); return; } apply(v*U(),true); });
 }
 SLIDERS.forEach(bindParam);
+let genKind=null;
+function fillGen(gen){
+  const box=$('insp-gen'); box.hidden=!gen; if(!gen){ return; }
+  if(genKind!==gen.k+S.lang){ genKind=gen.k+S.lang; box.textContent='';
+    for(const [key,lab,mn,mx,,len] of GENUI[gen.k]){
+      const l=document.createElement('label'); l.className='fld'; const sp=document.createElement('span'); sp.textContent=T(lab); const inp=document.createElement('input'); inp.inputMode='decimal'; inp.dataset.g=key;
+      inp.addEventListener('change',()=>{ let v=num(inp.value); if(v===null){ updateInspector(); return; } if(len) v*=U(); v=Math.max(mn,Math.min(mx,v));
+        const o=selected()[0]; if(!o||!o.prof||!o.prof.gen) return; pushUndo(); if(!setGen(o,key,v)) toast('Ce réglage ne laisse plus de matière.'); refresh(); });
+      l.append(sp,inp); box.appendChild(l); }
+  }
+  for(const inp of box.querySelectorAll('input')){ const d=GENUI[gen.k].find(q=>q[0]===inp.dataset.g); if(document.activeElement!==inp) inp.value=d[5]?fmt(gen[d[0]]||0):fmtDeg(gen[d[0]]||0); }
+}
 { const sl=$('s-hol'), nf=$('f-hol'); let live=false;
   const setHol=(o,mode,v)=>applyProf(o,{...o.prof,hm:mode,outline:mode==='through'?v:0,shell:mode==='cup'?v:0});
   const apply=(v,final)=>{
@@ -1788,9 +1930,13 @@ function spawnTile(parent,icon,labelFr,factory){
   el.addEventListener('pointerup',end); el.addEventListener('pointercancel',end);
   el.addEventListener('click',ev=>{ if(ev.detail===0){ const o=factory(); if(o) placeCentre(o); } });
 }
-for(const k in SHAPES) spawnTile($('shapes'),'<svg viewBox="0 0 34 34" aria-hidden="true">'+SHAPES[k].icon+'</svg>',SHAPES[k].name,makeShape(k));
+for(const k in SHAPES) spawnTile($(SHAPES[k].cat==='mould'?'moulds':'shapes'),'<svg viewBox="0 0 34 34" aria-hidden="true">'+SHAPES[k].icon+'</svg>',SHAPES[k].name,makeShape(k));
 spawnTile($('shapes'),svgIcon('text',''),'Texte',makeText);
-$('lib-cat').onchange=e=>{ const hw=e.target.value==='hardware'; $('shapes').hidden=hw; $('hw-box').hidden=!hw; };
+$('lib-cat').onchange=e=>{ const v=e.target.value; $('shapes').hidden=v!=='shapes'; $('moulds').hidden=v!=='mould'; $('hw-box').hidden=v!=='hardware'; $('comp-box').hidden=v!=='comp'; };
+CELLS.forEach((c,i)=>$('c-cell').add(new Option(c[0],i))); $('c-cell').value='1';
+MAGNETS.forEach((c,i)=>$('c-mag').add(new Option(c[0],i))); $('c-mag').value='4';
+spawnTile($('comps'),'<svg viewBox="0 0 34 34" aria-hidden="true"><rect x="9" y="8" width="16" height="22" rx="3"/><path d="M14 8V5h6v3M14 15h6M17 12v6M14 25h6"/></svg>','Pile',makeCell);
+spawnTile($('comps'),'<svg viewBox="0 0 34 34" aria-hidden="true"><path d="M7 6v11a10 10 0 0020 0V6h-7v11a3 3 0 01-6 0V6z"/><path d="M7 11h7M20 11h7"/></svg>','Aimant',makeMagnet);
 for(const t of ['hole','csk','cap','nut','ins']) spawnTile($('hardware'),svgIcon('hw_'+t,''),HWNAME[t],makeHW(t));
 
 /* ---------- cube de vue ---------- */
@@ -1813,6 +1959,8 @@ function updateCube(){
 function setPlate(dims,keepView){ S.plate=dims; buildPlate(); if(!keepView) homeView(); updateInspector(); ['p-x','p-y','p-z'].forEach((id,k)=>$(id).value=fmt(dims[k])); }
 $('p-printer').onchange=e=>{ const p=PRINTERS[e.target.value]; $('p-custom').hidden=+e.target.value!==PRINTERS.length-1; setPlate([p[1],p[2],p[3]]); };
 ['p-x','p-y','p-z'].forEach((id,k)=>$(id).addEventListener('change',e=>{ const v=num(e.target.value); if(v===null||v<=0){ $(id).value=fmt(S.plate[k]); return; } const d=[...S.plate]; d[k]=v*U(); setPlate(d); }));
+$('p-grid').addEventListener('input',e=>{ try{ localStorage.setItem('3di-grid',e.target.value); }catch(err){} readTheme(); draw(); });
+$('p-grid0').onclick=()=>{ try{ localStorage.removeItem('3di-grid'); }catch(err){} readTheme(); $('p-grid').value=theme.grid; draw(); };
 $('p-unit').onchange=e=>{ S.unit=e.target.value; ['p-x','p-y','p-z'].forEach((id,k)=>$(id).value=fmt(S.plate[k])); updateInspector(); };
 $('p-snap').onchange=e=>{ S.snap=+e.target.value; };
 const setMagnet=on=>{ S.magnet=on; store('3di-magnet',on?'1':'0'); $('b-magnet').setAttribute('aria-pressed',on); };
@@ -1889,7 +2037,7 @@ function upgradeOld(){
   }
 }
 setMagnet(S.magnet);
-readTheme(); applyLang(); homeView();
+readTheme(); applyLang(); homeView(); $('p-grid').value=/^#[0-9a-f]{6}$/i.test(theme.grid)?theme.grid:'#574db8';
 DOC.dirty=false;   /* la scène d'exemple et les réglages de départ ne comptent pas comme une modification */
 try{ const j=stored(DESK?'3di-recover':'3di-autosave'); if(j){ const d=JSON.parse(j); if(d.objs&&d.objs.length){ deserialize(d); upgradeOld(); if(DESK){ DOC.dirty=true; setTimeout(()=>toast('Session précédente restaurée (non enregistrée).'),600); } } } }catch(e){ console.error(e); }
 refresh(); frame();

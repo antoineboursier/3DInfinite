@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>3DInfinite — Logiciel de modélisation 3D simple pour l'impression 3D</title>
+<meta name="description" content="3DInfinite est un logiciel gratuit de modélisation 3D pensé pour l'impression 3D : on assemble des formes pleines et vides, on arrondit, on exporte en STL ou 3MF. Windows et macOS, sans compte, hors ligne.">
+<link rel="canonical" href="https://antoineboursier.github.io/3DInfinite/">
+<meta name="theme-color" content="#0c0a22">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="3DInfinite">
+<meta property="og:title" content="3DInfinite — Modélisation 3D simple pour l'impression 3D">
+<meta property="og:description" content="Assemble des formes, creuse, arrondis, exporte en STL ou 3MF. Logiciel gratuit pour Windows et macOS, sans compte.">
+<meta property="og:url" content="https://antoineboursier.github.io/3DInfinite/">
+<meta property="og:image" content="https://antoineboursier.github.io/3DInfinite/img/og.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/icon-180.png">
+<link rel="preload" href="fonts/outfit-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+ {"@type":"SoftwareApplication","@id":"https://antoineboursier.github.io/3DInfinite/#app","name":"3DInfinite","alternateName":"3DI",
+  "description":"Logiciel de modélisation 3D par assemblage de formes, orienté impression 3D : formes pleines et vides, arrondis, texte, engrenages, logements de vis, de piles et d'aimants, export STL et 3MF.",
+  "applicationCategory":"DesignApplication","applicationSubCategory":"Modélisation 3D pour l'impression 3D","operatingSystem":"Windows 10, Windows 11, macOS",
+  "inLanguage":["fr","en"],"url":"https://antoineboursier.github.io/3DInfinite/","downloadUrl":"https://github.com/antoineboursier/3DInfinite/releases/latest",
+  "image":"https://antoineboursier.github.io/3DInfinite/img/hero.webp","screenshot":"https://antoineboursier.github.io/3DInfinite/img/hero.webp",
+  "offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},
+  "featureList":["Formes pleines et formes vides","Groupes et fusion","Arrondis et chanfreins","Texte en relief avec les polices du système","Import STL et SVG","Export STL et 3MF multicolore","Engrenages paramétriques","Logements de vis, écrous, inserts, piles et aimants","Moulures pour cadres","Profils de plateau d'imprimantes"],
+  "author":{"@type":"Person","name":"Antoine Boursier"}},
+ {"@type":"FAQPage","mainEntity":[
+  {"@type":"Question","name":"3DInfinite est-il gratuit ?","acceptedAnswer":{"@type":"Answer","text":"Oui. 3DInfinite se télécharge gratuitement, sans compte et sans abonnement."}},
+  {"@type":"Question","name":"À quoi sert 3DInfinite ?","acceptedAnswer":{"@type":"Answer","text":"À dessiner des pièces à imprimer en 3D : boîtiers, supports, adaptateurs, cadres, pièces de rechange. On assemble des formes simples, on en retire d'autres, puis on exporte un fichier STL ou 3MF pour le slicer."}},
+  {"@type":"Question","name":"Quels formats de fichier sont pris en charge ?","acceptedAnswer":{"@type":"Answer","text":"Import : STL et SVG. Export : STL et 3MF (une pièce par couleur). Les projets sont enregistrés en fichiers .3di sur l'ordinateur."}},
+  {"@type":"Question","name":"Avec quelles imprimantes 3D fonctionne-t-il ?","acceptedAnswer":{"@type":"Answer","text":"Toutes : 3DInfinite produit des fichiers STL et 3MF que n'importe quel slicer sait lire. Des plateaux sont préréglés pour Elegoo Centauri Carbon, Bambu Lab A1, A1 mini, P1 et X1, Prusa MK4 et MINI+, Creality Ender-3 V3 et K1, et un plateau personnalisé est possible."}},
+  {"@type":"Question","name":"Faut-il une connexion internet ?","acceptedAnswer":{"@type":"Answer","text":"Non. Le logiciel fonctionne hors ligne et les fichiers restent sur l'ordinateur. La connexion sert seulement à vérifier si une mise à jour existe."}},
+  {"@type":"Question","name":"Est-ce un logiciel de CAO paramétrique ?","acceptedAnswer":{"@type":"Answer","text":"Non. 3DInfinite est un modeleur par assemblage de formes, volontairement simple. Il ne remplace pas un logiciel de CAO avec esquisses contraintes et historique."}}
+ ]}
+]}
+</script>
+<style>
+@font-face{font-family:"Outfit";font-weight:400;font-display:swap;src:url(fonts/outfit-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Outfit";font-weight:500;font-display:swap;src:url(fonts/outfit-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"Outfit";font-weight:600;font-display:swap;src:url(fonts/outfit-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Outfit";font-weight:700;font-display:swap;src:url(fonts/outfit-latin-700-normal.woff2) format("woff2")}
+:root{--bg:#0c0a22;--panel:#211c4e;--panel-2:#2c2568;--line:rgba(168,158,255,.22);--fg:#f3f1ff;--muted:#b9b3e6;--accent:#a394ff;--warm:#ff8468;--warm-fg:#2a0f34;--select:#5ee6d8;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:84px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+body{margin:0;background:radial-gradient(1000px 600px at 10% -10%,rgba(120,90,255,.34),transparent 70%),radial-gradient(800px 520px at 100% 30%,rgba(255,97,144,.12),transparent 70%),var(--bg);background-repeat:no-repeat;
+  color:var(--fg);font:400 17px/1.6 "Outfit",system-ui,-apple-system,"Segoe UI",sans-serif}
+img{max-width:100%;height:auto;display:block}
+a{color:var(--select)}
+:focus-visible{outline:3px solid var(--select);outline-offset:3px;border-radius:6px}
+.skip{position:absolute;left:-999px;top:8px;background:var(--fg);color:#140f38;padding:10px 16px;border-radius:10px;z-index:20}
+.skip:focus{left:16px}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right))}
+header.top{position:sticky;top:0;z-index:10;background:rgba(12,10,34,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex;align-items:center;gap:20px;min-height:68px}
+header.top img{height:40px;width:auto}
+nav{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+nav a{color:var(--fg);text-decoration:none;padding:8px 12px;border-radius:10px;font-weight:500}
+nav a:hover{background:rgba(255,255,255,.09)}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:14px 22px;border-radius:16px;font-weight:600;text-decoration:none;border:1px solid var(--line);background:var(--panel);color:var(--fg);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 8px 18px rgba(4,2,24,.45)}
+.btn:hover{filter:brightness(1.12)}
+.btn.primary,nav a.cta{background:linear-gradient(135deg,#ffab5e,#ff6190);color:var(--warm-fg);border-color:transparent}
+.btn small{display:block;font-weight:500;font-size:13px;opacity:.85}
+h1,h2,h3{line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.2rem,5.4vw,3.7rem);font-weight:700;letter-spacing:-.01em}
+h2{font-size:clamp(1.6rem,3.4vw,2.3rem);font-weight:600}
+h3{font-size:1.15rem;font-weight:600}
+p{margin:0}
+.hero{padding-top:72px;padding-bottom:36px}
+.hero .lead{font-size:1.22rem;color:var(--muted);max-width:44rem;margin:20px 0 28px}
+.hero h1 em{font-style:normal;color:var(--warm)}
+.actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.meta{color:var(--muted);font-size:.95rem;margin-top:14px}
+figure{margin:0}
+.shot{border-radius:22px;border:1px solid var(--line);box-shadow:0 30px 70px rgba(4,2,24,.7);overflow:hidden;background:var(--panel)}
+.hero .shot{margin-top:44px}
+figcaption{color:var(--muted);font-size:.95rem;margin-top:12px}
+section{padding:64px 0}
+.kicker{color:var(--accent);font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:.82rem;margin-bottom:10px}
+.intro{color:var(--muted);max-width:46rem;margin-top:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-top:32px;padding:0;list-style:none}
+.card{background:linear-gradient(160deg,rgba(44,37,104,.9),rgba(33,28,78,.9));border:1px solid var(--line);border-radius:20px;padding:22px}
+.card p{color:var(--muted);margin-top:8px;font-size:1rem}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:28px;margin-top:32px}
+.steps{counter-reset:s;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-top:32px;padding:0;list-style:none}
+.steps li{counter-increment:s;position:relative;padding:22px 22px 22px 70px;background:rgba(33,28,78,.7);border:1px solid var(--line);border-radius:20px}
+.steps li::before{content:counter(s);position:absolute;left:20px;top:20px;width:36px;height:36px;border-radius:12px;display:grid;place-items:center;font-weight:700;background:linear-gradient(135deg,#ffab5e,#ff6190);color:var(--warm-fg)}
+.steps p{color:var(--muted);margin-top:6px;font-size:1rem}
+.dl{background:linear-gradient(160deg,rgba(58,49,134,.85),rgba(33,28,78,.9));border:1px solid var(--line);border-radius:26px;padding:34px}
+.dl .actions{margin-top:24px}
+.note{margin-top:24px;color:var(--muted);font-size:.98rem}
+.note summary{cursor:pointer;color:var(--fg);font-weight:500}
+.note ol{margin:10px 0 0;padding-left:22px}
+#news{margin-top:22px;padding:18px 20px;border-radius:16px;background:rgba(8,6,32,.5);border:1px solid var(--line)}
+#news h3{font-size:1rem}
+#news ul{margin:8px 0 0;padding-left:20px;color:var(--muted);font-size:.98rem}
+.faq details{border-bottom:1px solid var(--line);padding:16px 0}
+.faq summary{cursor:pointer;font-weight:600;font-size:1.08rem}
+.faq p{color:var(--muted);margin-top:10px;max-width:50rem}
+footer{border-top:1px solid var(--line);padding:32px 0 48px;color:var(--muted);font-size:.95rem}
+footer .wrap{display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between}
+@media (max-width:640px){nav a:not(.cta){display:none}.hero{padding-top:44px}section{padding:48px 0}.dl{padding:24px}}
+</style>
+</head>
+<body>
+<a class="skip" href="#contenu">Aller au contenu</a>
+<header class="top">
+  <div class="wrap">
+    <a href="#" aria-label="3DInfinite, accueil"><img src="img/logo.svg" alt="3DInfinite" width="330" height="80"></a>
+    <nav aria-label="Navigation principale">
+      <a href="#fonctions">Fonctions</a><a href="#captures">Captures</a><a href="#faq">Questions</a>
+      <a class="cta" href="#telecharger">Télécharger</a>
+    </nav>
+  </div>
+</header>
+
+<main id="contenu">
+  <div class="wrap hero">
+    <h1>La modélisation 3D simple, pensée pour <em>l'impression 3D</em></h1>
+    <p class="lead">3DInfinite est un logiciel de construction 3D par assemblage de formes. On pose des volumes, on en creuse d'autres, on arrondit les arêtes, et on exporte un fichier STL ou 3MF prêt pour le slicer.</p>
+    <div class="actions">
+      <a class="btn primary" id="dl-main" href="#telecharger">Télécharger 3DInfinite</a>
+      <a class="btn" href="#fonctions">Voir les fonctions</a>
+    </div>
+    <p class="meta">Gratuit · Windows et macOS · Sans compte · Fonctionne hors ligne</p>
+    <figure class="shot"><img src="img/hero.webp" width="1920" height="1200" alt="Fenêtre de 3DInfinite : un boîtier orange aux angles arrondis sélectionné sur le plateau, entouré d'un engrenage, d'une étoile et d'un texte en relief ; à droite, la bibliothèque de formes et les réglages d'arrondi." fetchpriority="high"></figure>
+  </div>
+
+  <section id="quoi" aria-labelledby="t-quoi">
+    <div class="wrap">
+      <p class="kicker">Ce que c'est</p>
+      <h2 id="t-quoi">Un outil de construction 3D orienté impression</h2>
+      <p class="intro">3DInfinite n'est pas un logiciel d'animation ni une CAO d'ingénieur. C'est un atelier pour dessiner vite des pièces utiles : un boîtier, un support, un adaptateur, un cadre, une pièce de rechange. Tout y est exprimé en millimètres réels, sur le plateau de ton imprimante.</p>
+      <ol class="steps">
+        <li><h3>Assemble</h3><p>Glisse des formes sur le plateau : boîte, cylindre, polygone, étoile, texte, engrenage, moulure.</p></li>
+        <li><h3>Creuse</h3><p>Passe une forme en « vide » : une fois fusionnée, elle retire de la matière. Trous de vis, logements, fenêtres.</p></li>
+        <li><h3>Arrondis</h3><p>Règle les angles et les arêtes au curseur, en arrondi ou en chanfrein, comme dans un outil de design.</p></li>
+        <li><h3>Exporte</h3><p>STL ou 3MF, une pièce par couleur. Ouvre le fichier dans ton slicer et imprime.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="fonctions" aria-labelledby="t-fonctions">
+    <div class="wrap">
+      <p class="kicker">Fonctions</p>
+      <h2 id="t-fonctions">Ce que fait 3DInfinite</h2>
+      <ul class="grid">
+        <li class="card"><h3>Formes pleines et vides</h3><p>Chaque forme ajoute ou retire de la matière. Les groupes gardent les objets modifiables, la fusion en fait un seul volume.</p></li>
+        <li class="card"><h3>Arrondis précis</h3><p>Rayon des angles, arête haute, arête basse, chanfreins. Parois creuses avec fond ou traversantes, à l'épaisseur voulue.</p></li>
+        <li class="card"><h3>Texte et SVG</h3><p>Texte en relief avec les polices de l'ordinateur. Import d'un dessin SVG pour l'extruder.</p></li>
+        <li class="card"><h3>Visserie prête à l'emploi</h3><p>Trous de passage, têtes fraisées, écrous et inserts de M2 à M8, avec un jeu réglable.</p></li>
+        <li class="card"><h3>Piles et aimants</h3><p>Logements aux cotes standard : AA, AAA, 18650, CR2032, 9V, aimants de Ø3 à Ø20.</p></li>
+        <li class="card"><h3>Engrenages</h3><p>Denture en développante : nombre de dents, module, alésage et jeu. Deux roues de même module engrènent.</p></li>
+        <li class="card"><h3>Moulures</h3><p>Quart-de-rond, doucine, corniche, profil de cadre : des baguettes à couper pour habiller une pièce.</p></li>
+        <li class="card"><h3>Répétition et symétrie</h3><p>Copies en ligne, en cercle, symétries ×4 et ×8, alignement et magnétisme entre objets.</p></li>
+        <li class="card"><h3>Le plateau de ton imprimante</h3><p>Elegoo Centauri Carbon, Bambu Lab, Prusa, Creality, ou dimensions personnalisées.</p></li>
+        <li class="card"><h3>De vrais fichiers</h3><p>Les projets sont des fichiers <code>.3di</code> sur ton disque. Pas de compte, pas de cloud, rien n'est envoyé.</p></li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="captures" aria-labelledby="t-captures">
+    <div class="wrap">
+      <p class="kicker">Captures</p>
+      <h2 id="t-captures">À quoi ça ressemble</h2>
+      <div class="two">
+        <figure><div class="shot"><img src="img/logements.webp" width="1920" height="1200" loading="lazy" alt="Un support orange avec deux logements de piles AA et quatre logements d'aimants, affichés comme des formes vides translucides."></div><figcaption>Logements de piles AA et d'aimants, posés comme des formes vides avec leur jeu.</figcaption></figure>
+        <figure><div class="shot"><img src="img/moulures.webp" width="1920" height="1200" loading="lazy" alt="Six profils de moulures colorés posés à plat sur le plateau, à côté d'un congé MetaFillet ; la bibliothèque affiche la catégorie Moulures."></div><figcaption>Les moulures : des profils classiques à étirer et à couper.</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="telecharger" aria-labelledby="t-dl">
+    <div class="wrap">
+      <div class="dl">
+        <p class="kicker">Téléchargement</p>
+        <h2 id="t-dl">Installer 3DInfinite</h2>
+        <p class="intro" id="ver">Dernière version officielle, gratuite.</p>
+        <div class="actions">
+          <a class="btn" data-os="win" href="https://github.com/antoineboursier/3DInfinite/releases/latest/download/3DInfinite-Setup.exe"><span>Windows<small>10 et 11 · installeur .exe</small></span></a>
+          <a class="btn" data-os="mac" href="https://github.com/antoineboursier/3DInfinite/releases/latest/download/3DInfinite-mac-arm64.dmg"><span>Mac Apple Silicon<small>puces M1 à M4 · .dmg</small></span></a>
+          <a class="btn" data-os="mac-intel" href="https://github.com/antoineboursier/3DInfinite/releases/latest/download/3DInfinite-mac-x64.dmg"><span>Mac Intel<small>avant 2020 · .dmg</small></span></a>
+        </div>
+        <div id="news" hidden><h3 id="news-t">Nouveautés</h3><ul id="news-l"></ul></div>
+        <details class="note">
+          <summary>Premier lancement : le système affiche un avertissement</summary>
+          <p style="margin-top:10px">3DInfinite n'est pas encore signé auprès de Microsoft et d'Apple. Le système demande donc une confirmation, une seule fois.</p>
+          <ol>
+            <li><strong>Windows</strong> : dans la fenêtre « Windows a protégé votre ordinateur », clique sur <em>Informations complémentaires</em>, puis <em>Exécuter quand même</em>.</li>
+            <li><strong>macOS</strong> : glisse 3DInfinite dans Applications, lance-le, puis ouvre <em>Réglages Système → Confidentialité et sécurité</em> et clique sur <em>Ouvrir quand même</em>.</li>
+          </ol>
+        </details>
+        <p class="note">Déjà installé ? L'appli te prévient quand une nouvelle version sort. Toutes les versions sont sur <a href="https://github.com/antoineboursier/3DInfinite/releases">la page des versions</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" class="faq" aria-labelledby="t-faq">
+    <div class="wrap">
+      <p class="kicker">Questions fréquentes</p>
+      <h2 id="t-faq">Bon à savoir</h2>
+      <div style="margin-top:20px">
+        <details><summary>3DInfinite est-il gratuit ?</summary><p>Oui. Il se télécharge gratuitement, sans compte et sans abonnement.</p></details>
+        <details><summary>À quoi sert 3DInfinite ?</summary><p>À dessiner des pièces à imprimer en 3D : boîtiers, supports, adaptateurs, cadres, pièces de rechange. On assemble des formes simples, on en retire d'autres, puis on exporte un fichier STL ou 3MF pour le slicer.</p></details>
+        <details><summary>Quels formats de fichier sont pris en charge ?</summary><p>Import : STL et SVG. Export : STL et 3MF (une pièce par couleur). Les projets sont enregistrés en fichiers <code>.3di</code> sur l'ordinateur.</p></details>
+        <details><summary>Avec quelles imprimantes 3D fonctionne-t-il ?</summary><p>Toutes : 3DInfinite produit des fichiers STL et 3MF que n'importe quel slicer sait lire. Des plateaux sont préréglés pour Elegoo Centauri Carbon, Bambu Lab A1, A1 mini, P1 et X1, Prusa MK4 et MINI+, Creality Ender-3 V3 et K1, et un plateau personnalisé est possible.</p></details>
+        <details><summary>Faut-il une connexion internet ?</summary><p>Non. Le logiciel fonctionne hors ligne et les fichiers restent sur l'ordinateur. La connexion sert seulement à vérifier si une mise à jour existe.</p></details>
+        <details><summary>Est-ce un logiciel de CAO paramétrique ?</summary><p>Non. 3DInfinite est un modeleur par assemblage de formes, volontairement simple. Il ne remplace pas un logiciel de CAO avec esquisses contraintes et historique.</p></details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>3DInfinite — conçu par Antoine Boursier</span>
+    <span><a href="https://github.com/antoineboursier/3DInfinite">Code source</a> · <a href="https://github.com/antoineboursier/3DInfinite/releases">Versions</a></span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var ua=navigator.userAgent, os=/Windows/i.test(ua)?'win':/Macintosh|Mac OS X/i.test(ua)?'mac':null;
+  if(os){ var b=document.querySelector('.dl [data-os="'+os+'"]'); if(b){ b.classList.add('primary'); document.getElementById('dl-main').textContent='Télécharger pour '+(os==='win'?'Windows':'Mac'); } }
+  fetch('https://api.github.com/repos/antoineboursier/3DInfinite/releases/latest',{headers:{Accept:'application/vnd.github+json'}})
+    .then(function(r){ return r.ok?r.json():null; })
+    .then(function(rel){
+      if(!rel||!rel.tag_name) return;
+      var v=String(rel.tag_name).replace(/^v/,''), d=new Date(rel.published_at);
+      document.getElementById('ver').textContent='Version '+v+(isNaN(d)?'':' du '+d.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}))+', gratuite.';
+      var items=String(rel.body||'').split(/\r?\n/).map(function(l){ var m=l.match(/^\s*[-*]\s+(.*)/); return m?m[1].replace(/[`*]/g,''):null; }).filter(Boolean).slice(0,8);
+      if(items.length){ var ul=document.getElementById('news-l'); items.forEach(function(t){ var li=document.createElement('li'); li.textContent=t; ul.appendChild(li); });
+        document.getElementById('news-t').textContent='Nouveautés de la version '+v; document.getElementById('news').hidden=false; }
+    }).catch(function(){});
+})();
+</script>
+</body>
+</html>
