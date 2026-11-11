@@ -1,10 +1,13 @@
 name: Publier les installeurs
 
-# Se lance quand on pousse un tag de version (ex. v1.0.1) :
-# fabrique l'installeur Windows (.exe) et les .dmg Mac, puis les ajoute à la release GitHub.
+# Publier une nouvelle version = changer "version" dans package.json puis pousser sur main.
+# Si la release de cette version n'existe pas encore, elle est créée (avec son tag) et les installeurs
+# Windows (.exe) et macOS (.dmg) y sont ajoutés. Bouton « Run workflow » possible pour un premier essai.
 on:
   push:
-    tags: ['v*']
+    branches: [main]
+    paths: ['package.json']
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -12,23 +15,26 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    outputs:
+      create: ${{ steps.v.outputs.create }}
     steps:
       - uses: actions/checkout@v4
-      - name: Le tag doit correspondre à la version de package.json
-        run: |
-          V=$(node -p "require('./package.json').version")
-          if [ "v$V" != "$GITHUB_REF_NAME" ]; then
-            echo "Le tag $GITHUB_REF_NAME ne correspond pas à la version $V de package.json"; exit 1
-          fi
-      - name: Créer la release (si elle n'existe pas)
+      - id: v
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || \
-          gh release create "$GITHUB_REF_NAME" --title "3DInfinite ${GITHUB_REF_NAME#v}" --generate-notes
+          V=$(node -p "require('./package.json').version")
+          if gh release view "v$V" >/dev/null 2>&1; then
+            echo "La version v$V existe déjà : rien à publier."
+            echo "create=no" >> "$GITHUB_OUTPUT"
+          else
+            gh release create "v$V" --target "$GITHUB_SHA" --title "3DInfinite $V" --generate-notes
+            echo "create=yes" >> "$GITHUB_OUTPUT"
+          fi
 
   build:
     needs: release
+    if: needs.release.outputs.create == 'yes'
     strategy:
       fail-fast: false
       matrix:

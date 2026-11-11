@@ -25,13 +25,12 @@ Ouvrir le dossier dans n'importe quel éditeur (Antigravity, VS Code…). Le cod
 
 ## Publier une nouvelle version
 
-```bash
-npm version patch          # 1.0.0 -> 1.0.1 (ou minor / major) : change package.json, commit et tag v1.0.1
-git push --follow-tags
-```
+1. Changer `"version"` dans `package.json` (ex. `1.0.0` → `1.0.1`) — ou `npm version patch --no-git-tag-version`.
+2. Commit, puis `git push` sur `main`.
 
-GitHub Actions fabrique alors `3DInfinite-Setup-X.Y.Z.exe` (Windows) et `3DInfinite-X.Y.Z-arm64.dmg` / `-x64.dmg` (macOS),
-puis les ajoute à la page **Releases** (environ 10 minutes). Le tag doit correspondre à la version de `package.json`.
+GitHub Actions détecte la nouvelle version, crée la release et le tag `vX.Y.Z`, puis fabrique et y ajoute
+`3DInfinite-Setup-X.Y.Z.exe` (Windows) et `3DInfinite-X.Y.Z-arm64.dmg` / `-x64.dmg` (macOS) — environ 10 minutes.
+Suivi : onglet **Actions** du dépôt. Les installeurs apparaissent dans **Releases**. Une version déjà publiée n'est jamais refabriquée.
 
 ## Mises à jour côté utilisateur
 
