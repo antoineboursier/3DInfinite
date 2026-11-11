@@ -1,0 +1,17 @@
+# Tout est ignoré, sauf ce qui fait partie du projet.
+/*
+!/.gitignore
+!/.github
+!/README.md
+!/package.json
+!/package-lock.json
+!/main.js
+!/preload.js
+!/config.js
+!/build
+!/tools
+!/src
+/build/icon.png
+/src/*
+!/src/app.html
+!/src/geom.js

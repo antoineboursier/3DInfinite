@@ -1,0 +1,100 @@
+{
+  "name": "3dinfinite",
+  "productName": "3DInfinite",
+  "version": "1.0.0",
+  "description": "3DInfinite — modélisation 3D simple pour l'impression 3D",
+  "author": "Antoine Boursier",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "build:app": "node tools/make-icons.mjs && node tools/build-app.mjs",
+    "start": "npm run build:app && electron .",
+    "dist": "npm run build:app && electron-builder",
+    "dist:win": "npm run build:app && electron-builder --win",
+    "dist:mac": "npm run build:app && electron-builder --mac"
+  },
+  "devDependencies": {
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/outfit": "^5.3.0",
+    "@resvg/resvg-js": "^2.6.2",
+    "electron": "^45.3.0",
+    "electron-builder": "^26.18.0",
+    "manifold-3d": "^3.5.4",
+    "opentype.js": "^1.3.4",
+    "three": "^0.128.0"
+  },
+  "build": {
+    "appId": "fr.antoineboursier.3dinfinite",
+    "productName": "3DInfinite",
+    "copyright": "3DInfinite",
+    "directories": {
+      "buildResources": "build",
+      "output": "release"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "config.js",
+      "app/**/*",
+      "build/icon.png",
+      "package.json"
+    ],
+    "fileAssociations": [
+      {
+        "ext": "3di",
+        "name": "Projet 3DInfinite",
+        "description": "Projet 3DInfinite",
+        "role": "Editor"
+      }
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "antoineboursier",
+        "repo": "3DInfinite",
+        "releaseType": "release"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "3DInfinite-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "deleteAppDataOnUninstall": false
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "category": "public.app-category.graphics-design",
+      "identity": "-",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "artifactName": "3DInfinite-${version}-${arch}.${ext}"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Graphics",
+      "artifactName": "3DInfinite-${version}.${ext}"
+    }
+  }
+}
