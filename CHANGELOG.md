@@ -13,6 +13,7 @@ et s'affiche dans la fenêtre « Mise à jour disponible » de l'appli. Reste co
 - Redimensionnement à la souris calé sur le pas de la grille
 - Poignées avec contour, flèches de rotation affinées, panneau allégé (pictos Taille / Position / Rotation)
 - Triangle posé à plat
+- Visserie, piles et aimants : le modèle, la taille et le jeu se règlent dans le panneau de la pièce posée
 
 ## 1.1.0
 

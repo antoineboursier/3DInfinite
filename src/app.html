@@ -232,6 +232,12 @@ summary{cursor:pointer;font-weight:600;font-size:12.5px;margin-bottom:8px}
             <div class="sl"><span data-t="Creuser"></span><input type="range" id="s-hol" min="0" max="100" step="1"><input id="f-hol" inputmode="decimal" data-tt="Creuser : 0 % = plein. En mm : épaisseur des parois."></div>
             <label class="chk" id="l-fond"><input type="checkbox" id="hm-fond"><span data-t="Fond"></span></label>
           </div>
+          <div id="insp-comp" hidden>
+            <div class="row two">
+              <label class="fld"><span data-t="Modèle"></span><select id="k-model"></select></label>
+              <label class="fld"><span data-t="Jeu"></span><input id="k-jeu" inputmode="decimal" data-tt="Espace ajouté tout autour pour que la pièce entre"></label>
+            </div>
+          </div>
           <div id="insp-hw" hidden>
             <div class="row">
               <label class="fld"><span data-t="Taille"></span><select id="h-size"></select></label>
@@ -286,21 +292,13 @@ summary{cursor:pointer;font-weight:600;font-size:12.5px;margin-bottom:8px}
     <div class="tiles" id="shapes"></div>
     <div class="tiles" id="moulds" hidden></div>
     <div id="comp-box" hidden>
-      <div class="row two">
-        <label class="fld"><span data-t="Pile"></span><select id="c-cell"></select></label>
-        <label class="fld"><span data-t="Aimant"></span><select id="c-mag"></select></label>
-      </div>
-      <div class="row two"><label class="fld"><span data-t="Jeu"></span><input id="c-jeu" inputmode="decimal" value="0,2"></label></div>
       <div class="tiles" id="comps"></div>
     </div>
     <div id="hw-box" hidden>
-      <div class="row two">
-        <label class="fld"><span data-t="Taille"></span><select id="v-size"></select></label>
-        <label class="fld"><span data-t="Jeu"></span><input id="v-jeu" inputmode="decimal" value="0,2"></label>
-      </div>
       <div class="tiles" id="hardware"></div>
     </div>
-    <p class="note" data-t="Glisse une forme sur le plateau, ou clique pour la poser au centre."></p>
+    <p class="note" id="lib-note" data-t="Glisse une forme sur le plateau, ou clique pour la poser au centre."></p>
+    <p class="note" id="lib-note2" hidden data-t="Pose la pièce, puis choisis sa taille et son jeu dans son panneau."></p>
   </aside>
 </div>
 
@@ -529,16 +527,22 @@ const CELLS=[['AAA',10.5,44.5],['AA',14.5,50.5],['C',26.2,50],['D',34.2,61.5],['
   ['CR2032',20,3.2,1],['CR2025',20,2.5,1],['CR2016',20,1.6,1],['LR44',11.6,5.4,1],['9V',26.5,17.5,48.5,2]];
 const MAGNETS=[['Ø3 × 1',3,1],['Ø4 × 2',4,2],['Ø5 × 2',5,2],['Ø5 × 3',5,3],['Ø6 × 2',6,2],['Ø6 × 3',6,3],['Ø8 × 2',8,2],['Ø8 × 3',8,3],['Ø10 × 2',10,2],['Ø10 × 3',10,3],['Ø10 × 5',10,5],
   ['Ø12 × 3',12,3],['Ø15 × 3',15,3],['Ø20 × 3',20,3],['10 × 5 × 2',10,5,2,2],['20 × 10 × 2',20,10,2,2],['20 × 10 × 5',20,10,5,2]];
-function compJeu(){ const v=num($('c-jeu').value); return v===null||v<0?0:v*U(); }
-function compBase(spec,j,lying){
+/* le modèle et le jeu se règlent dans le panneau de l'objet posé ; le dernier choix sert de point de départ au suivant */
+const COMPDEF={cell:1,mag:4,j:.2}, COMPLIST={cell:CELLS,mag:MAGNETS}, COMPNAME={cell:'Pile ',mag:'Aimant '};
+function compBase(c){
+  const sp=COMPLIST[c.t][c.i], j=c.j, box=sp.length===5;
   return make(()=>{
-    if(spec[4]===2) return Manifold.cube([spec[1]+2*j,spec[2]+2*j,spec[3]+2*j],true);
-    const r=spec[1]/2+j, L=spec[2]+2*j, c=Manifold.cylinder(L,r,r,96,true);
-    if(!lying) return c; const m=c.rotate([0,90,0]); c.delete(); return m; });
+    if(box) return Manifold.cube([sp[1]+2*j,sp[2]+2*j,sp[3]+2*j],true);
+    const r=sp[1]/2+j, L=sp[2]+2*j, cy=Manifold.cylinder(L,r,r,96,true);
+    if(c.t!=='cell'||sp[3]===1) return cy; const m=cy.rotate([0,90,0]); cy.delete(); return m; });
 }
-const makeCell=()=>{ const sp=CELLS[+$('c-cell').value], box=sp.length===5; const spec=box?[sp[0],sp[1],sp[2],sp[3],2]:sp;
-  return newObj(compBase(spec,compJeu(),!box&&sp[3]!==1),label('Pile '+sp[0]),{hole:true}); };
-const makeMagnet=()=>{ const sp=MAGNETS[+$('c-mag').value]; return newObj(compBase(sp,compJeu(),false),label('Aimant '+sp[0]),{hole:true}); };
+const makeComp=t=>()=>{ const c={t,i:COMPDEF[t],j:COMPDEF.j}, o=newObj(compBase(c),label(COMPNAME[t]+COMPLIST[t][c.i][0]),{hole:true}); o.comp=c; return o; };
+const makeCell=makeComp('cell'), makeMagnet=makeComp('mag');
+function setComp(o,patch){
+  const c={...o.comp,...patch}, base=compBase(c), bottom=o.pos[2]-o.size[2]/2;
+  o.comp=c; o.base=base; o.size=[...base.size]; o.pos[2]=bottom+o.size[2]/2;
+  o.name=COMPNAME[c.t]+COMPLIST[c.t][c.i][0]; COMPDEF[c.t]=c.i; COMPDEF.j=c.j;
+}
 
 /* cône, pyramide, rampe, dôme : les arêtes vives s'arrondissent par « ouverture » (on érode d'une bille, puis on regonfle).
    Cône et dôme sont des révolutions : l'ouverture se fait sur leur coupe, c'est instantané. Sphère et anneau n'ont aucune arête vive. */
@@ -804,9 +808,11 @@ function hwSolid(hw){
   return Manifold.cylinder(L,r,r,48);
 }
 function hwBase(hw){ const man=hwSolid(hw), {base}=baseFrom(man); man.delete(); return base; }
-function applyHW(o,hw){ const base=hwBase(hw), bottom=boxOf(o).min[2]; o.hw=hw; o.base=base; o.size=[...base.size]; o.pos[2]+=bottom-boxOf(o).min[2]; }
+/* taille et jeu se règlent dans le panneau de l'objet posé ; le dernier choix sert de point de départ au suivant */
+const HWDEF={size:'M3',j:.2};
+function applyHW(o,hw){ HWDEF.size=hw.size; if(hw.type!=='ins') HWDEF.j=hw.j; const base=hwBase(hw), bottom=boxOf(o).min[2]; o.hw=hw; o.base=base; o.size=[...base.size]; o.pos[2]+=bottom-boxOf(o).min[2]; }
 function addHardware(type){
-  const size=$('v-size').value, h=HW[size], jv=num($('v-jeu').value), j=type==='ins'||jv===null||jv<0?0:jv*U();
+  const size=HWDEF.size, h=HW[size], j=type==='ins'?0:HWDEF.j;
   const hw={type,size,j,L:type==='nut'?h.nut+j:type==='ins'?h.insL+1:20}, base=hwBase(hw);
   pushUndo();
   const o=newObj(base,label(HWNAME[type]+' '+size),{hole:true,kind:'hw',hw}), n=S.objs.length%6;
@@ -1539,6 +1545,8 @@ canvas.addEventListener('pointerup',endDrag); canvas.addEventListener('pointerca
 
 /* ---------- langues : le français sert de clé, l'anglais est une table ---------- */
 const EN={
+  'Pose la pièce, puis choisis sa taille et son jeu dans son panneau.':'Place the part, then choose its size and clearance in its panel.',
+  'Modèle':'Model','Espace ajouté tout autour pour que la pièce entre':'Clearance added all around so the part fits',
   'Creuser':'Hollow','Fond':'Bottom','Creuser : 0 % = plein. En mm : épaisseur des parois.':'Hollow: 0% = solid. In mm: wall thickness.','Régler les arrondis en pourcentage ou en valeur réelle':'Set rounding as a percentage or a real value',
   'Taille':'Size','Position':'Position','Rotation':'Rotation','Écart X':'Step X','Écart Y':'Step Y','Écart Z':'Step Z','Diamètre':'Diameter','Écartement':'Spacing','Indique un écart sur au moins un axe.':'Set a step on at least one axis.',
   'Non':'Off','Mode symétrie (mandala)':'Symmetry mode (mandala)','Figer les copies en objets':'Turn copies into objects',
@@ -1743,7 +1751,8 @@ function updateInspector(){
   }
   if(n===1){
     const o=list[0], b=boxOf(o), pf=o.kind==='profile'?o.prof:null;
-    $('insp-prof').hidden=!pf; $('insp-hw').hidden=o.kind!=='hw';
+    $('insp-prof').hidden=!pf; $('insp-hw').hidden=o.kind!=='hw'; $('insp-comp').hidden=!o.comp;
+    if(o.comp){ const km=$('k-model'); if(km.dataset.t!==o.comp.t){ km.dataset.t=o.comp.t; km.textContent=''; COMPLIST[o.comp.t].forEach((c,i)=>km.add(new Option(c[0],i))); } km.value=o.comp.i; if(document.activeElement!==$('k-jeu')) $('k-jeu').value=fmt(o.comp.j); }
     $('insp-shp').hidden=!(o.kind==='shape'&&o.shp); $('insp-smooth').hidden=!(o.kind==='shape'&&o.smooth&&!o.shp);
     $('unitsw').hidden=!(pf||(o.kind==='shape'&&o.shp)); unitUI();
     if(o.kind==='shape'&&o.shp) showParam('rr',o,o.shp.rr||0);
@@ -1850,7 +1859,7 @@ for(const [,c] of COLORS){ const b=document.createElement('button'); b.className
   ci.addEventListener('input',()=>{ const list=selected(); if(!list.length) return; if(!live){ pushUndo(); live=true; } list.forEach(o=>paintOne(o,ci.value)); syncMeshes(); $('sq-solid').style.background=ci.value; });
   ci.addEventListener('change',()=>{ live=false; refresh(); }); }
 $('f-multi').onchange=e=>{ const on=e.target.checked; editOne(o=>setMulti(o,on)); };
-for(const k in HW){ $('h-size').add(new Option(k,k)); $('v-size').add(new Option(k,k)); } $('v-size').value='M3';
+for(const k in HW) $('h-size').add(new Option(k,k));
 $('h-size').onchange=e=>editOne(o=>{ o.name=o.name.replace(o.hw.size,e.target.value); applyHW(o,{...o.hw,size:e.target.value}); });
 $('h-jeu').addEventListener('change',e=>{ const v=num(e.target.value); if(v===null||v<0){ updateInspector(); return; } editOne(o=>applyHW(o,{...o.hw,j:v*U()})); });
 $('h-len').addEventListener('change',e=>{ const v=num(e.target.value); if(v===null||v<=0){ updateInspector(); return; } editOne(o=>applyHW(o,{...o.hw,L:v*U()})); });
@@ -2012,7 +2021,7 @@ const makeText=()=>{
   return base?newObj(base,label('Texte'),{kind:'profile',prof}):null;
 };
 const makeHW=type=>()=>{
-  const size=$('v-size').value, h=HW[size], jv=num($('v-jeu').value), j=type==='ins'||jv===null||jv<0?0:jv*U();
+  const size=HWDEF.size, h=HW[size], j=type==='ins'?0:HWDEF.j;
   const hw={type,size,j,L:type==='nut'?h.nut+j:type==='ins'?h.insL+1:20};
   return newObj(hwBase(hw),label(HWNAME[type]+' '+size),{hole:true,kind:'hw',hw});
 };
@@ -2040,9 +2049,9 @@ function spawnTile(parent,icon,labelFr,factory){
 }
 for(const k in SHAPES) if(!SHAPES[k].hide) spawnTile($(SHAPES[k].cat==='mould'?'moulds':'shapes'),'<svg viewBox="0 0 34 34" aria-hidden="true">'+SHAPES[k].icon+'</svg>',SHAPES[k].name,makeShape(k));
 spawnTile($('shapes'),svgIcon('text',''),'Texte',makeText);
-$('lib-cat').onchange=e=>{ const v=e.target.value; $('shapes').hidden=v!=='shapes'; $('moulds').hidden=v!=='mould'; $('hw-box').hidden=v!=='hardware'; $('comp-box').hidden=v!=='comp'; };
-CELLS.forEach((c,i)=>$('c-cell').add(new Option(c[0],i))); $('c-cell').value='1';
-MAGNETS.forEach((c,i)=>$('c-mag').add(new Option(c[0],i))); $('c-mag').value='4';
+$('lib-cat').onchange=e=>{ const v=e.target.value; $('shapes').hidden=v!=='shapes'; $('moulds').hidden=v!=='mould'; $('hw-box').hidden=v!=='hardware'; $('comp-box').hidden=v!=='comp'; const cfg=v==='hardware'||v==='comp'; $('lib-note').hidden=cfg; $('lib-note2').hidden=!cfg; };
+$('k-model').onchange=e=>editOne(o=>{ if(o.comp) setComp(o,{i:+e.target.value}); });
+$('k-jeu').addEventListener('change',e=>{ const v=num(e.target.value); if(v===null||v<0||v>5){ updateInspector(); return; } editOne(o=>{ if(o.comp) setComp(o,{j:v*U()}); }); });
 spawnTile($('comps'),'<svg viewBox="0 0 34 34" aria-hidden="true"><rect x="9" y="8" width="16" height="22" rx="3"/><path d="M14 8V5h6v3M14 15h6M17 12v6M14 25h6"/></svg>','Pile',makeCell);
 spawnTile($('comps'),'<svg viewBox="0 0 34 34" aria-hidden="true"><path d="M7 6v11a10 10 0 0020 0V6h-7v11a3 3 0 01-6 0V6z"/><path d="M7 11h7M20 11h7"/></svg>','Aimant',makeMagnet);
 for(const t of ['hole','csk','cap','nut','ins']) spawnTile($('hardware'),svgIcon('hw_'+t,''),HWNAME[t],makeHW(t));
