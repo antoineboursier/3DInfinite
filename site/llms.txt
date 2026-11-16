@@ -17,6 +17,6 @@
 
 ## Liens
 
-- [Site](https://antoineboursier.github.io/3DInfinite/)
+- [Site](https://3dinfinite.vercel.app/)
 - [Téléchargement et notes de version](https://github.com/antoineboursier/3DInfinite/releases)
 - [Code source](https://github.com/antoineboursier/3DInfinite)

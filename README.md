@@ -22,7 +22,7 @@ Ouvrir le dossier dans n'importe quel éditeur (Antigravity, VS Code…). Le cod
 | `tools/build-app.mjs` | Assemble `src/` + bibliothèques locales dans `app/` (fonctionne hors ligne) |
 | `build/icon.svg` | Icône (le PNG est généré) |
 | `.github/workflows/release.yml` | Publie une version officielle (lancé à la main) |
-| `.github/workflows/site.yml` | Met le site en ligne |
+| `vercel.json` | Configuration Vercel du site (dossier `site/`) |
 | `CHANGELOG.md` | Notes de chaque version |
 | `site/`, `brand/` | Site internet, logos et charte |
 
@@ -50,9 +50,8 @@ Le dépôt doit rester **public** pour que l'appli et le site puissent lire les 
 ## Site internet
 
 Le dossier `site/` est une page statique (présentation, captures, téléchargement, FAQ, données structurées, `llms.txt`).
-Elle est mise en ligne par GitHub Pages à chaque modification de `site/` (workflow **Mettre le site en ligne**).
-Réglage à faire une fois : **Settings → Pages → Source : GitHub Actions**.
-Adresse : https://antoineboursier.github.io/3DInfinite/ — les boutons pointent toujours vers la dernière version officielle,
+Il est hébergé sur Vercel : le projet Vercel est lié à ce dépôt, avec `vercel.json` (sortie `site/`, aucun build).
+Chaque push sur `main` redéploie le site automatiquement. Les boutons pointent toujours vers la dernière version officielle,
 et la page affiche son numéro et ses nouveautés. Si tu prends un nom de domaine : remplacer cette adresse dans
 `site/index.html`, `site/robots.txt`, `site/sitemap.xml`, `site/llms.txt` et `config.js`.
 
