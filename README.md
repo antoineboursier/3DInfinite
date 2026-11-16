@@ -22,7 +22,7 @@ Ouvrir le dossier dans n'importe quel éditeur (Antigravity, VS Code…). Le cod
 | `tools/build-app.mjs` | Assemble `src/` + bibliothèques locales dans `app/` (fonctionne hors ligne) |
 | `build/icon.svg` | Icône (le PNG est généré) |
 | `.github/workflows/release.yml` | Publie une version officielle (lancé à la main) |
-| `vercel.json` | Configuration Vercel du site (dossier `site/`) |
+| `site/api/contact.js` | Reçoit les messages du formulaire de contact (site et appli) et les envoie par e-mail |
 | `CHANGELOG.md` | Notes de chaque version |
 | `site/`, `brand/` | Site internet, logos et charte |
 
@@ -50,10 +50,28 @@ Le dépôt doit rester **public** pour que l'appli et le site puissent lire les 
 ## Site internet
 
 Le dossier `site/` est une page statique (présentation, captures, téléchargement, FAQ, données structurées, `llms.txt`).
-Il est hébergé sur Vercel : le projet Vercel est lié à ce dépôt, avec `vercel.json` (sortie `site/`, aucun build).
+Il est hébergé sur Vercel (https://3dinfinite.vercel.app/) : le projet Vercel est lié à ce dépôt, avec `site` comme
+**Root Directory** (Settings → Build and Deployment), sans build.
 Chaque push sur `main` redéploie le site automatiquement. Les boutons pointent toujours vers la dernière version officielle,
 et la page affiche son numéro et ses nouveautés. Si tu prends un nom de domaine : remplacer cette adresse dans
 `site/index.html`, `site/robots.txt`, `site/sitemap.xml`, `site/llms.txt` et `config.js`.
+
+## Formulaire de contact
+
+Le site (section « Contact ») et l'appli (bouton enveloppe en haut à droite, ou menu **Aide → Contacter l'auteur…**)
+envoient leurs messages à `site/api/contact.js`, une fonction Vercel qui les transmet par e-mail avec
+[Resend](https://resend.com). L'adresse de l'auteur n'est écrite nulle part dans le code : elle est lue dans les
+variables d'environnement du projet Vercel (**Settings → Environments → Production**) :
+
+| Variable | Rôle |
+|---|---|
+| `CONTACT_TO` | Adresse qui reçoit les messages |
+| `RESEND_API_KEY` | Clé d'API Resend (compte gratuit, créé avec la même adresse que `CONTACT_TO`) |
+| `CONTACT_FROM` | Facultatif : expéditeur affiché, une fois un nom de domaine vérifié chez Resend |
+
+Après avoir ajouté ou modifié une variable, redéployer le site. Tant qu'elles manquent, le formulaire répond
+« pas encore activé ». Limites : 3 pièces jointes, 3 Mo au total, 5 messages par 10 minutes et par adresse IP.
+Sans nom de domaine vérifié, Resend n'accepte d'envoyer qu'à l'adresse du compte : c'est le cas voulu ici.
 
 ## Charte et logos
 

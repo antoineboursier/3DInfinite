@@ -18,4 +18,3 @@
 /src/*
 !/src/app.html
 !/src/geom.js
-!/vercel.json

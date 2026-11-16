@@ -12,8 +12,10 @@ contextBridge.exposeInMainWorld('desktop', {
   confirmDiscard: (name) => ipcRenderer.invoke('doc:confirm', name), // 'save'|'discard'|'cancel'
   closeNow: () => ipcRenderer.send('app:close-now'),
   ready: () => ipcRenderer.send('app:ready'),
+  /* contact : {name, email, message, attachments:[{name, data(base64)}]} -> {ok, error} */
+  sendContact: (o) => ipcRenderer.invoke('contact:send', o),
   /* événements venant du menu / du système */
-  onMenu: (fn) => on('menu', fn),            // 'new'|'open'|'save'|'saveAs'|'close-request'
+  onMenu: (fn) => on('menu', fn),            // 'new'|'open'|'save'|'saveAs'|'close-request'|'contact'
   onEdit: (fn) => on('edit', fn),            // 'copy'|'paste'|'selectAll' (menu Édition macOS)
   onOpenFile: (fn) => on('open-file', fn),   // {path,name,data}  (double-clic sur un .3di)
 });

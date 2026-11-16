@@ -3,6 +3,12 @@
 Chaque version officielle a sa section `## X.Y.Z`. Ce texte devient la note de la release GitHub
 et s'affiche dans la fenêtre « Mise à jour disponible » de l'appli. Reste court : une liste de ce qui change pour l'utilisateur.
 
+## 1.3.0
+
+- Contacter l'auteur : le bouton enveloppe, en haut à droite, ouvre un formulaire pour envoyer une question, une idée ou un bug
+- Pièces jointes : le projet en cours en une case à cocher, ou des fichiers (capture d'écran, STL, 3MF, SVG)
+- Aussi disponible dans le menu Aide et sur le site
+
 ## 1.2.0
 
 - Arrondis en pourcentage, plafonnés pour ne pas déformer la pièce ; bascule % / mm, ou saisie directe « 30% » ou « 2mm »

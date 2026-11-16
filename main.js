@@ -74,6 +74,7 @@ function buildMenu() {
   const help = { label: t('Aide', 'Help'), submenu: [
     { label: t('Rechercher des mises à jour…', 'Check for updates…'), click: () => checkForUpdates(true) },
     { label: t('Site de 3DInfinite', '3DInfinite website'), click: () => shell.openExternal(cfg.site) },
+    { label: t("Contacter l'auteur…", 'Contact the author…'), click: send('contact') },
     ...(isMac ? [] : [{ type: 'separator' }, { label: t('À propos de 3DInfinite', 'About 3DInfinite'), click: () =>
       dialog.showMessageBox(win, { type: 'info', title: '3DInfinite', message: '3DInfinite', detail: t('Version ', 'Version ') + app.getVersion(), icon: path.join(__dirname, 'build', 'icon.png') }) }]),
   ] };
@@ -139,6 +140,17 @@ ipcMain.on('app:ready', () => {
   rendererReady = true;
   const f = pendingFile || process.argv.find(isProject); pendingFile = null;
   if (f) queueOpen(f);
+});
+
+/* ---------- contact : le message part vers le site, qui l'envoie par e-mail à l'auteur ---------- */
+ipcMain.handle('contact:send', async (_e, o) => {
+  try {
+    const res = await net.fetch(cfg.contact, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...o, source: 'app', meta: { version: app.getVersion(), platform: process.platform + ' ' + process.arch } }) });
+    const d = await res.json().catch(() => null);
+    if (d && typeof d.ok === 'boolean') return { ok: d.ok, error: d.error || null };
+    return { ok: false, error: res.status === 413 ? 'too_large' : 'send' };
+  } catch (e) { return { ok: false, error: 'offline' }; }
 });
 
 /* ---------- mise à jour : « Version X disponible : télécharger ? » ---------- */

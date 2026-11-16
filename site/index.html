@@ -102,6 +102,20 @@ section{padding:64px 0}
 .faq details{border-bottom:1px solid var(--line);padding:16px 0}
 .faq summary{cursor:pointer;font-weight:600;font-size:1.08rem}
 .faq p{color:var(--muted);margin-top:10px;max-width:50rem}
+.contact{display:grid;gap:16px;margin-top:28px;max-width:46rem;background:linear-gradient(160deg,rgba(44,37,104,.9),rgba(33,28,78,.9));border:1px solid var(--line);border-radius:22px;padding:26px}
+.contact .frow{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+.contact label{display:grid;gap:6px;font-weight:500}
+.contact small{color:var(--muted);font-weight:400}
+.contact input,.contact textarea{font:inherit;color:var(--fg);background:rgba(8,6,32,.55);border:1px solid var(--line);border-radius:12px;padding:11px 13px;width:100%;min-width:0}
+.contact textarea{resize:vertical;min-height:140px}
+.contact input:focus,.contact textarea:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px rgba(163,148,255,.3)}
+.contact input[type=file]{padding:9px}
+.contact button{font:inherit;cursor:pointer}
+.contact button:disabled{opacity:.6;cursor:default}
+.contact .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+#contact-status{color:var(--muted);min-height:1.6em}
+#contact-status.ok{color:var(--select)}
+#contact-status.err{color:#ff9aab}
 footer{border-top:1px solid var(--line);padding:32px 0 48px;color:var(--muted);font-size:.95rem}
 footer .wrap{display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between}
 @media (max-width:640px){nav a:not(.cta){display:none}.hero{padding-top:44px}section{padding:48px 0}.dl{padding:24px}}
@@ -113,7 +127,7 @@ footer .wrap{display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between}
   <div class="wrap">
     <a href="#" aria-label="3DInfinite, accueil"><img src="img/logo.svg" alt="3DInfinite" width="330" height="80"></a>
     <nav aria-label="Navigation principale">
-      <a href="#fonctions">Fonctions</a><a href="#captures">Captures</a><a href="#faq">Questions</a>
+      <a href="#fonctions">Fonctions</a><a href="#captures">Captures</a><a href="#faq">Questions</a><a href="#contact">Contact</a>
       <a class="cta" href="#telecharger">Télécharger</a>
     </nav>
   </div>
@@ -214,12 +228,31 @@ footer .wrap{display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between}
       </div>
     </div>
   </section>
+
+  <section id="contact" aria-labelledby="t-contact">
+    <div class="wrap">
+      <p class="kicker">Contact</p>
+      <h2 id="t-contact">Écrire à l'auteur</h2>
+      <p class="intro">Une question, une idée, un bug ? Écris-moi ici. Si quelque chose ne marche pas, joins ton projet <code>.3di</code> ou une capture d'écran : ça aide beaucoup.</p>
+      <form class="contact" id="contact-form" novalidate>
+        <div class="frow">
+          <label><span>Ton nom <small>(facultatif)</small></span><input name="name" maxlength="80" autocomplete="name"></label>
+          <label><span>Ton e-mail <small>(pour recevoir une réponse)</small></span><input name="email" type="email" maxlength="120" autocomplete="email"></label>
+        </div>
+        <label><span>Ton message</span><textarea name="message" rows="6" maxlength="5000" required></textarea></label>
+        <label class="hp" aria-hidden="true">Ne pas remplir ce champ<input name="website" tabindex="-1" autocomplete="off"></label>
+        <label><span>Pièces jointes <small>(facultatif : 3 fichiers, 3 Mo au total)</small></span>
+          <input name="files" type="file" multiple accept=".3di,.json,.stl,.3mf,.svg,.png,.jpg,.jpeg,.webp,.gif,.txt,.log,.pdf,.zip"></label>
+        <div class="actions"><button class="btn primary" type="submit">Envoyer le message</button><p id="contact-status" role="status" aria-live="polite"></p></div>
+      </form>
+    </div>
+  </section>
 </main>
 
 <footer>
   <div class="wrap">
     <span>3DInfinite — conçu par Antoine Boursier</span>
-    <span><a href="https://github.com/antoineboursier/3DInfinite">Code source</a> · <a href="https://github.com/antoineboursier/3DInfinite/releases">Versions</a></span>
+    <span><a href="#contact">Contact</a> · <a href="https://github.com/antoineboursier/3DInfinite">Code source</a> ·<a href="https://github.com/antoineboursier/3DInfinite/releases">Versions</a></span>
   </div>
 </footer>
 
@@ -237,6 +270,35 @@ footer .wrap{display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between}
       if(items.length){ var ul=document.getElementById('news-l'); items.forEach(function(t){ var li=document.createElement('li'); li.textContent=t; ul.appendChild(li); });
         document.getElementById('news-t').textContent='Nouveautés de la version '+v; document.getElementById('news').hidden=false; }
     }).catch(function(){});
+})();
+
+/* Formulaire de contact : le message part vers api/contact, qui l'envoie par e-mail à l'auteur. */
+(function(){
+  var form=document.getElementById('contact-form'), status=document.getElementById('contact-status'), btn=form.querySelector('button');
+  var MAX_FILES=3, MAX_BYTES=3*1024*1024, EXT=/\.(3di|json|stl|3mf|svg|png|jpe?g|webp|gif|txt|log|pdf|zip)$/i;
+  var ERR={message:'Écris un message d\'au moins 10 caractères.', email:'Cette adresse e-mail ne semble pas valide.',
+    files:'Pièces jointes refusées : 3 fichiers au plus, aux formats .3di, .stl, .3mf, .svg, image, .pdf, .txt ou .zip.',
+    too_large:'Les pièces jointes dépassent 3 Mo au total.', rate:'Trop de messages envoyés. Réessaie dans quelques minutes.',
+    config:'Le formulaire n\'est pas encore activé. Réessaie plus tard.', send:'L\'envoi a échoué. Réessaie dans un instant.'};
+  function say(text,kind){ status.textContent=text; status.className=kind||''; }
+  function read(file){ return new Promise(function(ok,ko){ var r=new FileReader(); r.onload=function(){ ok({name:file.name, data:String(r.result).split(',')[1]||''}); }; r.onerror=ko; r.readAsDataURL(file); }); }
+  form.addEventListener('submit',function(ev){
+    ev.preventDefault();
+    var message=form.message.value.trim(), email=form.email.value.trim(), files=[].slice.call(form.files.files);
+    if(message.length<10) return say(ERR.message,'err');
+    if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return say(ERR.email,'err');
+    if(files.length>MAX_FILES || files.some(function(f){ return !EXT.test(f.name); })) return say(ERR.files,'err');
+    if(files.reduce(function(n,f){ return n+f.size; },0)>MAX_BYTES) return say(ERR.too_large,'err');
+    btn.disabled=true; say('Envoi en cours…');
+    Promise.all(files.map(read)).then(function(att){
+      return fetch('api/contact',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({source:'site', name:form.name.value, email:email, message:message, website:form.website.value, attachments:att})});
+    }).then(function(r){ return r.json().catch(function(){ return {ok:false, error:r.status===413?'too_large':'send'}; }); })
+    .then(function(d){
+      if(d&&d.ok){ form.reset(); say(email?'Message envoyé. Merci, je te réponds dès que possible.':'Message envoyé. Merci !','ok'); }
+      else say(ERR[d&&d.error]||ERR.send,'err');
+    }).catch(function(){ say(ERR.send,'err'); }).then(function(){ btn.disabled=false; });
+  });
 })();
 </script>
 </body>

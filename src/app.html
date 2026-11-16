@@ -144,6 +144,18 @@ summary{cursor:pointer;font-weight:600;font-size:12.5px;margin-bottom:8px}
 .help b{font-weight:600;color:var(--select)}
 .note{color:var(--muted);font-size:12px;margin:10px 0 0}
 
+#dlg-contact{width:min(470px,calc(100vw - 24px));padding:20px;color:var(--fg);background:var(--panel)}
+#dlg-contact::backdrop{background:rgba(6,4,26,.62)}
+#dlg-contact h3{margin:0;font-size:16px;font-weight:600}
+#dlg-contact h3+.note{margin:4px 0 14px}
+#dlg-contact .fld{margin-bottom:10px}
+#dlg-contact textarea{font:inherit;color:inherit;resize:vertical;min-height:110px;font-variant-numeric:normal}
+#dlg-contact .end{justify-content:flex-end;margin:14px 0 0}
+#ct-files{list-style:none;margin:0;padding:0;display:grid;gap:5px;font-size:12.5px}
+#ct-files li{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#ct-files:empty{display:none}
+#ct-status:empty{display:none}
+
 #toast{position:absolute;left:50%;top:16px;transform:translateX(-50%);background:var(--warm);color:var(--warm-fg);padding:8px 16px;border-radius:99px;font-weight:600;max-width:70%;text-align:center;z-index:5;box-shadow:0 10px 24px rgba(255,105,130,.35)}
 #band{position:absolute;pointer-events:none;border:1px solid var(--select);border-radius:6px;background:color-mix(in srgb,var(--select) 14%,transparent)}
 #tip{position:absolute;pointer-events:none;background:#fff;color:#1a1446;padding:3px 9px;border-radius:8px;font-weight:600;font-variant-numeric:tabular-nums;transform:translate(14px,14px);white-space:nowrap;box-shadow:0 6px 14px rgba(4,2,24,.5)}
@@ -187,6 +199,7 @@ summary{cursor:pointer;font-weight:600;font-size:12.5px;margin-bottom:8px}
   <div class="sep"></div>
   <button class="btn" data-i="import" data-pop="pop-import"><span data-t="Importer"></span></button>
   <button class="btn primary" data-i="export" data-pop="pop-export"><span data-t="Exporter"></span></button>
+  <button class="ib" id="b-contact" data-i="mail" data-tt="Contacter l'auteur"></button>
   <button class="ib lang" id="b-lang" data-tt="Langue"></button>
 </header>
 
@@ -344,6 +357,24 @@ summary{cursor:pointer;font-weight:600;font-size:12.5px;margin-bottom:8px}
   </div>
 </div>
 <div class="panel pop" id="pop-help" hidden style="width:290px"><ul class="help" id="help"></ul></div>
+<dialog class="panel" id="dlg-contact" aria-labelledby="ct-title">
+  <form id="ct-form" novalidate>
+    <h3 id="ct-title" data-t="Contacter l'auteur"></h3>
+    <p class="note" data-t="Une question, une idée, un bug ? Ton message arrive directement à l'auteur."></p>
+    <div class="row two">
+      <label class="fld"><span data-t="Ton nom (facultatif)"></span><input id="ct-name" maxlength="80" autocomplete="name"></label>
+      <label class="fld"><span data-t="Ton e-mail (pour une réponse)"></span><input id="ct-email" type="email" maxlength="120" autocomplete="email"></label>
+    </div>
+    <label class="fld"><span data-t="Ton message"></span><textarea class="wide" id="ct-msg" rows="7" maxlength="5000"></textarea></label>
+    <label class="chk" id="ct-lproj"><input type="checkbox" id="ct-proj"><span data-t="Joindre le projet en cours"></span></label>
+    <div class="acts"><button type="button" class="btn sm" id="ct-add" data-t="Ajouter un fichier"></button></div>
+    <ul id="ct-files"></ul>
+    <p class="note" data-t="3 pièces jointes au plus, 3 Mo au total."></p>
+    <p class="note" id="ct-status" role="status" aria-live="polite"></p>
+    <div class="acts end"><button type="button" class="btn" id="ct-cancel" data-t="Annuler"></button><button type="submit" class="btn primary" id="ct-send" data-t="Envoyer"></button></div>
+  </form>
+</dialog>
+<input type="file" id="in-attach" accept=".3di,.json,.stl,.3mf,.svg,.png,.jpg,.jpeg,.webp,.gif,.txt,.log,.pdf,.zip" multiple hidden>
 <input type="file" id="in-stl" accept=".stl" multiple hidden>
 <input type="file" id="in-proj" accept=".3di,.json,application/json" hidden>
 <input type="file" id="in-svg" accept=".svg,image/svg+xml" hidden>
@@ -1057,9 +1088,56 @@ if(DESK){
     if(cmd==='new') newProject(); else if(cmd==='open') openDialog();
     else if(cmd==='save') saveProject(); else if(cmd==='saveAs') saveProject(true);
     else if(cmd==='close-request'){ if(await guard(true)) DESK.closeNow(); }
+    else if(cmd==='contact') openContact();
   });
   DESK.onOpenFile(async f=>{ if(await guard()) loadDoc(f); });
   DESK.onEdit(cmd=>{ if(cmd==='copy') copySel(); else if(cmd==='paste') pasteSel(); else if(cmd==='selectAll'){ S.sel=new Set(S.objs.map(o=>o.id)); refresh(); } });
+}
+/* ---------- contacter l'auteur : message et pièces jointes, envoyés par le site (l'adresse de l'auteur n'apparaît nulle part) ---------- */
+const CT={files:[], max:3, bytes:3*1024*1024, ext:/\.(3di|json|stl|3mf|svg|png|jpe?g|webp|gif|txt|log|pdf|zip)$/i, url:'https://3dinfinite.vercel.app/api/contact'};
+const CT_ERR={message:"Écris un message d'au moins 10 caractères.", email:"Cette adresse e-mail ne semble pas valide.",
+  files:"Pièces jointes refusées : 3 au plus, en .3di, .stl, .3mf, .svg, image, .pdf, .txt ou .zip.", too_large:"Les pièces jointes dépassent 3 Mo au total.",
+  rate:"Trop de messages envoyés. Réessaie dans quelques minutes.", config:"L'envoi de messages n'est pas encore activé. Réessaie plus tard.",
+  send:"L'envoi a échoué. Réessaie dans un instant.", offline:"Pas de connexion internet : le message n'est pas parti."};
+const ctSize=a=>Math.floor(a.data.length*3/4);
+function ctSay(msg,err){ const s=$('ct-status'); s.textContent=msg?T(msg):''; s.style.color=err?'var(--danger)':''; }
+function ctList(){
+  const ul=$('ct-files'); ul.textContent='';
+  CT.files.forEach((f,i)=>{ const li=document.createElement('li'), x=document.createElement('button');
+    li.textContent=f.name+' ('+Math.max(1,Math.round(ctSize(f)/1024))+' Ko)'; x.type='button'; x.className='btn sm'; x.textContent='×'; x.title=T('Retirer'); x.setAttribute('aria-label',T('Retirer')+' '+f.name);
+    x.onclick=()=>{ CT.files.splice(i,1); ctList(); }; li.appendChild(x); ul.appendChild(li); });
+}
+function openContact(){
+  const d=$('dlg-contact'); if(d.open) return; closePops();
+  ctSay(''); $('ct-lproj').hidden=!S.objs.length; if(!S.objs.length) $('ct-proj').checked=false; ctList();
+  d.showModal(); $('ct-msg').focus();
+}
+async function ctAdd(files){
+  for(const f of files){
+    if(!CT.ext.test(f.name)||CT.files.length>=CT.max){ ctSay(CT_ERR.files,true); continue; }
+    CT.files.push({name:f.name, data:b64(new Uint8Array(await f.arrayBuffer()))});
+  }
+  ctList();
+}
+async function sendContact(){
+  const message=$('ct-msg').value.trim(), email=$('ct-email').value.trim();
+  if(message.length<10) return ctSay(CT_ERR.message,true);
+  if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return ctSay(CT_ERR.email,true);
+  const att=CT.files.slice();
+  if($('ct-proj').checked&&S.objs.length) att.push({name:(DOC.name||'Projet')+'.3di', data:b64(new TextEncoder().encode(JSON.stringify(serialize())))});
+  if(att.length>CT.max) return ctSay(CT_ERR.files,true);
+  if(att.reduce((n,a)=>n+ctSize(a),0)>CT.bytes) return ctSay(CT_ERR.too_large,true);
+  const body={name:$('ct-name').value, email, message, attachments:att};
+  $('ct-send').disabled=true; ctSay('Envoi en cours…');
+  let r;
+  try{
+    if(DESK&&DESK.sendContact) r=await DESK.sendContact(body);
+    else{ const res=await fetch(CT.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...body, source:'app', meta:{version:'web', platform:navigator.platform}})});
+      r=await res.json().catch(()=>({ok:false, error:res.status===413?'too_large':'send'})); }
+  }catch(e){ r={ok:false, error:'offline'}; }
+  $('ct-send').disabled=false;
+  if(r&&r.ok){ $('ct-msg').value=''; CT.files=[]; $('ct-proj').checked=false; $('dlg-contact').close(); toast('Message envoyé. Merci !'); }
+  else ctSay(CT_ERR[r&&r.error]||CT_ERR.send,true);
 }
 /* ---------- texte et SVG ---------- */
 const FONTS=new Map(); let localFonts=[];
@@ -1545,6 +1623,15 @@ canvas.addEventListener('pointerup',endDrag); canvas.addEventListener('pointerca
 
 /* ---------- langues : le français sert de clé, l'anglais est une table ---------- */
 const EN={
+  "Contacter l'auteur":'Contact the author',"Une question, une idée, un bug ? Ton message arrive directement à l'auteur.":'A question, an idea, a bug? Your message goes straight to the author.',
+  'Ton nom (facultatif)':'Your name (optional)','Ton e-mail (pour une réponse)':'Your email (to get a reply)','Ton message':'Your message',
+  'Joindre le projet en cours':'Attach the current project','Ajouter un fichier':'Add a file','3 pièces jointes au plus, 3 Mo au total.':'Up to 3 attachments, 3 MB in total.',
+  'Annuler':'Cancel','Envoyer':'Send','Retirer':'Remove','Envoi en cours…':'Sending…','Message envoyé. Merci !':'Message sent. Thank you!',
+  "Écris un message d'au moins 10 caractères.":'Write a message of at least 10 characters.',"Cette adresse e-mail ne semble pas valide.":'This email address does not look valid.',
+  "Pièces jointes refusées : 3 au plus, en .3di, .stl, .3mf, .svg, image, .pdf, .txt ou .zip.":'Attachments rejected: 3 at most, as .3di, .stl, .3mf, .svg, image, .pdf, .txt or .zip.',
+  "Les pièces jointes dépassent 3 Mo au total.":'Attachments exceed 3 MB in total.',"Trop de messages envoyés. Réessaie dans quelques minutes.":'Too many messages sent. Try again in a few minutes.',
+  "L'envoi de messages n'est pas encore activé. Réessaie plus tard.":'Messaging is not enabled yet. Try again later.',"L'envoi a échoué. Réessaie dans un instant.":'Sending failed. Try again in a moment.',
+  "Pas de connexion internet : le message n'est pas parti.":'No internet connection: the message was not sent.',
   'Pose la pièce, puis choisis sa taille et son jeu dans son panneau.':'Place the part, then choose its size and clearance in its panel.',
   'Modèle':'Model','Espace ajouté tout autour pour que la pièce entre':'Clearance added all around so the part fits',
   'Creuser':'Hollow','Fond':'Bottom','Creuser : 0 % = plein. En mm : épaisseur des parois.':'Hollow: 0% = solid. In mm: wall thickness.','Régler les arrondis en pourcentage ou en valeur réelle':'Set rounding as a percentage or a real value',
@@ -1658,7 +1745,7 @@ const ICON={
   magnet:'M6 4v8a6 6 0 0 0 12 0V4h-4v8a2 2 0 0 1-4 0V4z M6 8h4 M14 8h4',
   import:'M12 3v12 M7 10l5 5 5-5 M4 17v3h16v-3', export:'M12 15V3 M7 8l5-5 5 5 M4 17v3h16v-3',
   help:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8 M12 17h.01',
-  grid:'M3 3h18v18H3z M3 9h18 M3 15h18 M9 3v18 M15 3v18', chev:'M6 9l6 6 6-6',
+  grid:'M3 3h18v18H3z M3 9h18 M3 15h18 M9 3v18 M15 3v18', chev:'M6 9l6 6 6-6', mail:'M3 6h18v12H3z M3 7l9 7 9-7',
   curve:'M4 18c3-11 13-11 16 0 M3 17h2v2H3z M19 17h2v2h-2z M11 8h2v2h-2z',
   text:'M5 7V4h14v3 M12 4v16 M9 20h6', solid:'M5 5h14v14H5z', hole:'M5 5h14v14H5z M5 19L19 5 M5 12l7-7 M12 19l7-7', selall:'M4 4h4 M10 4h4 M16 4h4 M4 20h4 M10 20h4 M16 20h4 M4 10v4 M20 10v4 M9 9h6v6H9z',
   hw_hole:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z', hw_csk:'M4 5h16l-5 5v10H9V10z', hw_cap:'M5 4h14v6h-4v10H9V10H5z',
@@ -2099,6 +2186,10 @@ view.addEventListener('drop',e=>{ e.preventDefault(); view.classList.remove('ove
   if(stl.length) importSTL(stl); else if(svg) importSVG(svg); else if(pj) openProject(pj); else toast('Dépose un fichier .stl, .svg ou un projet 3DI.'); });
 $('b-home').onclick=()=>homeView(); $('b-fit').onclick=fitView; $('b-zin').onclick=()=>nav.zoom(.8); $('b-zout').onclick=()=>nav.zoom(1.25);
 $('b-lang').onclick=()=>{ S.lang=S.lang==='fr'?'en':'fr'; store('3di-lang',S.lang); applyLang(); };
+$('b-contact').onclick=openContact; $('ct-cancel').onclick=()=>$('dlg-contact').close(); $('ct-add').onclick=()=>$('in-attach').click();
+$('in-attach').onchange=e=>{ ctAdd([...e.target.files]); e.target.value=''; };
+$('ct-form').addEventListener('submit',e=>{ e.preventDefault(); sendContact(); });
+$('dlg-contact').addEventListener('keydown',e=>e.stopPropagation());   /* les raccourcis de la scène ne s'appliquent pas pendant la saisie */
 
 let clip=[], clipN=0;
 let toastT; function toast(msg){ const t=$('toast'); t.textContent=T(msg); t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true,3600); }
