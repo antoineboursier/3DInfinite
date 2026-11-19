@@ -3,6 +3,12 @@
 Chaque version officielle a sa section `## X.Y.Z`. Ce texte devient la note de la release GitHub
 et s'affiche dans la fenêtre « Mise à jour disponible » de l'appli. Reste court : une liste de ce qui change pour l'utilisateur.
 
+## 1.4.0
+
+- Nouvelle forme « Grille » : barres droites ou inclinées (angle au choix), en un ou deux sens, avec épaisseur des barres, espacement et cadre réglables
+- Arrondis d'arête haute et basse sur les barres, comme pour les autres formes
+- Étirer une grille ajoute ou retire des cases : les barres gardent leur épaisseur
+
 ## 1.3.0
 
 - Contacter l'auteur : le bouton enveloppe, en haut à droite, ouvre un formulaire pour envoyer une question, une idée ou un bug
