@@ -12,6 +12,20 @@ const isProject = (p) => /\.3di$/i.test(p || '');
 
 app.setAppUserModelId('fr.antoineboursier.3dinfinite');
 
+/* ---------- projets récents : liste tenue par l'appli (userData/recent.json), lue par la page d'accueil ---------- */
+const recentFile = () => path.join(app.getPath('userData'), 'recent.json');
+async function readRecent() {
+  try { const j = JSON.parse(await fs.readFile(recentFile(), 'utf8')); return Array.isArray(j) ? j.filter((r) => r && typeof r.path === 'string') : []; }
+  catch (e) { return []; }
+}
+async function writeRecent(list) { try { await fs.writeFile(recentFile(), JSON.stringify(list)); } catch (e) { /* la liste est facultative */ } }
+async function pushRecent(p) {
+  if (!isProject(p)) return;
+  const list = (await readRecent()).filter((r) => r.path !== p);
+  list.unshift({ path: p });
+  await writeRecent(list.slice(0, 20));
+}
+
 /* ---------- une seule fenêtre ; un double-clic sur un .3di l'ouvre dans l'appli déjà lancée ---------- */
 if (!app.requestSingleInstanceLock()) { app.quit(); }
 else {
@@ -26,7 +40,7 @@ async function queueOpen(p) {
   if (!rendererReady || !win) { pendingFile = p; return; }
   try {
     const data = await fs.readFile(p);
-    app.addRecentDocument(p);
+    app.addRecentDocument(p); pushRecent(p);
     win.webContents.send('open-file', { path: p, name: path.basename(p), data: new Uint8Array(data) });
   } catch (e) { dialog.showErrorBox('3DInfinite', t('Impossible de lire ce fichier.', 'Could not read this file.')); }
 }
@@ -55,6 +69,8 @@ function createWindow() {
 function buildMenu() {
   const send = (cmd) => () => win && win.webContents.send('menu', cmd);
   const file = [
+    { label: t('Accueil', 'Home'), click: send('home') },
+    { type: 'separator' },
     { label: t('Nouveau projet', 'New project'), accelerator: 'CmdOrCtrl+N', click: send('new') },
     { label: t('Ouvrir…', 'Open…'), accelerator: 'CmdOrCtrl+O', click: send('open') },
     { type: 'separator' },
@@ -108,7 +124,7 @@ ipcMain.handle('file:save', async (_e, o) => {
     }
     await fs.writeFile(p, Buffer.from(o.data));
     lastDir = path.dirname(p);
-    if (o.kind === 'project') app.addRecentDocument(p);
+    if (o.kind === 'project') { app.addRecentDocument(p); await pushRecent(p); }
     return { path: p, name: path.basename(p) };
   } catch (e) {
     dialog.showErrorBox('3DInfinite', t("L'enregistrement a échoué : ", 'Saving failed: ') + (e.message || e));
@@ -120,10 +136,32 @@ ipcMain.handle('file:open', async () => {
     filters: [{ name: t('Projet 3DInfinite', '3DInfinite project'), extensions: ['3di', 'json'] }] });
   if (r.canceled || !r.filePaths[0]) return null;
   try {
-    const p = r.filePaths[0]; lastDir = path.dirname(p); app.addRecentDocument(p);
+    const p = r.filePaths[0]; lastDir = path.dirname(p); app.addRecentDocument(p); pushRecent(p);
     return { path: p, name: path.basename(p), data: new Uint8Array(await fs.readFile(p)) };
   } catch (e) { dialog.showErrorBox('3DInfinite', t('Impossible de lire ce fichier.', 'Could not read this file.')); return null; }
 });
+/* page d'accueil : projets récents encore présents sur le disque, ouverture, oubli d'une entrée */
+ipcMain.handle('recent:list', async () => {
+  const out = [];
+  for (const r of await readRecent()) {
+    try {
+      const st = await fs.stat(r.path);
+      out.push({ path: r.path, name: path.basename(r.path).replace(/\.3di$/i, ''), dir: path.dirname(r.path), time: st.mtimeMs });
+    } catch (e) { /* fichier déplacé ou supprimé : on l'ignore */ }
+    if (out.length >= 10) break;
+  }
+  return out;
+});
+ipcMain.handle('recent:open', async (_e, p) => {
+  if (!(await readRecent()).some((r) => r.path === p)) return null;   // seuls les fichiers de la liste sont lisibles
+  try {
+    const data = await fs.readFile(p);
+    lastDir = path.dirname(p); app.addRecentDocument(p); await pushRecent(p);
+    return { path: p, name: path.basename(p), data: new Uint8Array(data) };
+  } catch (e) { return null; }
+});
+ipcMain.handle('recent:forget', async (_e, p) => { await writeRecent((await readRecent()).filter((r) => r.path !== p)); return true; });
+ipcMain.on('link:site', () => { shell.openExternal(cfg.site); });
 ipcMain.on('doc:state', (_e, st) => {
   dirty = !!st.dirty;
   if (win && isMac) { win.setDocumentEdited(dirty); win.setRepresentedFilename(st.path || ''); }
@@ -163,7 +201,9 @@ function pickAsset(assets) {
     : (a) => /\.AppImage$/i.test(a.name);
   return assets.find(ok);
 }
-let checking = false;
+let checking = false, updateInfo = null;
+ipcMain.handle('update:get', () => updateInfo);
+ipcMain.on('update:download', () => { if (updateInfo && /^https:\/\//.test(updateInfo.url)) shell.openExternal(updateInfo.url); });
 async function checkForUpdates(manual) {
   if (checking || !win) return;
   if (!manual && !app.isPackaged && !process.env.DI_CHECK_UPDATE) return;
@@ -181,11 +221,16 @@ async function checkForUpdates(manual) {
       // notes de version (CHANGELOG) : texte simple, raccourci
       const notes = String(rel.body || '').replace(/\r/g, '').replace(/^#+\s*/gm, '').replace(/\*\*|`/g, '').replace(/^\s*[-*]\s+/gm, '• ').trim();
       const short = notes.length > 700 ? notes.slice(0, 700).replace(/\s+\S*$/, '') + '…' : notes;
-      const r = await dialog.showMessageBox(win, { type: 'info', defaultId: 0, cancelId: 1, noLink: true, title: '3DInfinite',
-        buttons: [t('Télécharger', 'Download'), t('Plus tard', 'Later')],
-        message: t(`Mise à jour disponible : 3DInfinite ${latest}`, `Update available: 3DInfinite ${latest}`),
-        detail: (short ? short + '\n\n' : '') + t(`Vous utilisez la version ${app.getVersion()}. Télécharger la nouvelle version ?`, `You are using version ${app.getVersion()}. Download the new version?`) });
-      if (r.response === 0) shell.openExternal(url);
+      // la page affiche l'information (page d'accueil et pastille de la barre) ; la boîte de dialogue ne sert qu'à la vérification manuelle
+      updateInfo = { version: latest, current: app.getVersion(), url, notes: short };
+      if (win) win.webContents.send('update', updateInfo);
+      if (manual) {
+        const r = await dialog.showMessageBox(win, { type: 'info', defaultId: 0, cancelId: 1, noLink: true, title: '3DInfinite',
+          buttons: [t('Télécharger', 'Download'), t('Plus tard', 'Later')],
+          message: t(`Mise à jour disponible : 3DInfinite ${latest}`, `Update available: 3DInfinite ${latest}`),
+          detail: (short ? short + '\n\n' : '') + t(`Vous utilisez la version ${app.getVersion()}. Télécharger la nouvelle version ?`, `You are using version ${app.getVersion()}. Download the new version?`) });
+        if (r.response === 0) shell.openExternal(url);
+      }
     } else if (manual) {
       dialog.showMessageBox(win, { type: 'info', title: '3DInfinite', message: t('Vous utilisez la dernière version.', 'You are up to date.'), detail: 'v' + app.getVersion() });
     }

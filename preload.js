@@ -14,6 +14,14 @@ contextBridge.exposeInMainWorld('desktop', {
   ready: () => ipcRenderer.send('app:ready'),
   /* contact : {name, email, message, attachments:[{name, data(base64)}]} -> {ok, error} */
   sendContact: (o) => ipcRenderer.invoke('contact:send', o),
+  /* page d'accueil : projets récents, site, mise à jour */
+  recent: () => ipcRenderer.invoke('recent:list'),                // -> [{path,name,dir,time}]
+  openRecent: (p) => ipcRenderer.invoke('recent:open', p),        // -> {path,name,data}|null
+  forgetRecent: (p) => ipcRenderer.invoke('recent:forget', p),
+  openSite: () => ipcRenderer.send('link:site'),
+  getUpdate: () => ipcRenderer.invoke('update:get'),              // -> {version,current,url,notes}|null
+  downloadUpdate: () => ipcRenderer.send('update:download'),
+  onUpdate: (fn) => on('update', fn),                             // {version,current,url,notes}
   /* événements venant du menu / du système */
   onMenu: (fn) => on('menu', fn),            // 'new'|'open'|'save'|'saveAs'|'close-request'|'contact'
   onEdit: (fn) => on('edit', fn),            // 'copy'|'paste'|'selectAll' (menu Édition macOS)

@@ -158,16 +158,23 @@ function makeGeom(wasm){
     let man=null;
     if(rt<1e-6 && rb<1e-6) man=Manifold.extrude(cs,H);
     else{
-      try{
-        const polys=cs.toPolygons().map(dedupe).filter(c=>c.length>2), rings=ringsFor(H,rt,rb,p.style);
-        const L=loft(polys,rings), R=Math.max(rt,rb), ref=cs.offset(-R,'Miter',4), aRef=ref.area(); ref.delete();
-        const ri=rb>=rt?0:rings.length-1, aLoft=L.capPolys(ri).reduce((s,c)=>s+area(c),0);
-        const each=L.capPolys(ri).every((c,ci)=>Math.sign(area(c))===Math.sign(area(polys[ci])));
-        if(each && aRef>1e-9 && Math.abs(aLoft-aRef)<=aRef*.004){
-          man=new Manifold(new Mesh({numProp:3,vertProperties:L.verts,triVerts:L.tris}));
-          if(man.isEmpty()||man.volume()<=0){ man.delete(); man=null; }
-        }
-      }catch(e){ man=null; }
+      /* arrondi lisse : à 100 % le rayon atteint la demi-section et la peau par décalage n'est plus valable.
+         Plutôt que de tomber sur les marches, on réduit le rayon de quelques pourcents jusqu'à une peau valable. */
+      const tryLoft=(a,b)=>{
+        try{
+          const polys=cs.toPolygons().map(dedupe).filter(c=>c.length>2), rings=ringsFor(H,a,b,p.style);
+          const L=loft(polys,rings), R=Math.max(a,b), ref=cs.offset(-R,'Miter',4), aRef=ref.area(); ref.delete();
+          const ri=b>=a?0:rings.length-1, aLoft=L.capPolys(ri).reduce((s,c)=>s+area(c),0);
+          const each=L.capPolys(ri).every((c,ci)=>Math.sign(area(c))===Math.sign(area(polys[ci])));
+          if(each && aRef>1e-9 && Math.abs(aLoft-aRef)<=aRef*.004){
+            const m=new Manifold(new Mesh({numProp:3,vertProperties:L.verts,triVerts:L.tris}));
+            if(m.isEmpty()||m.volume()<=0){ m.delete(); return null; }
+            return m;
+          }
+        }catch(e){}
+        return null;
+      };
+      for(const k of [1,.995,.99,.98,.97,.95,.9]){ man=tryLoft(rt*k,rb*k); if(man) break; }
       if(!man) man=stairs(cs,H,rt,rb,p.style);
     }
     /* coque : on creuse l'intérieur en gardant un fond de la même épaisseur */
