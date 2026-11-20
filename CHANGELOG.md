@@ -3,6 +3,12 @@
 Chaque version officielle a sa section `## X.Y.Z`. Ce texte devient la note de la release GitHub
 et s'affiche dans la fenêtre « Mise à jour disponible » de l'appli. Reste court : une liste de ce qui change pour l'utilisateur.
 
+## 1.6.0
+
+- Mise à jour sur place sous Windows : le bouton « Mettre à jour » ne télécharge que les parties modifiées, puis « Redémarrer et installer » relance l'appli à la place de l'ancienne
+- Une barre de progression suit le téléchargement ; l'installation se fait aussi à la fermeture si on ne redémarre pas tout de suite
+- Si la mise à jour sur place échoue, le téléchargement s'ouvre dans le navigateur, comme avant
+
 ## 1.5.0
 
 - Page d'accueil au lancement : projets récents (avec la date, et une croix pour les retirer), boutons Nouveau projet et Ouvrir, lien vers le site et contact
