@@ -3,6 +3,10 @@
 Chaque version officielle a sa section `## X.Y.Z`. Ce texte devient la note de la release GitHub
 et s'affiche dans la fenêtre « Mise à jour disponible » de l'appli. Reste court : une liste de ce qui change pour l'utilisateur.
 
+## 1.6.1
+
+- Mise à jour sur place : vérification de la version suivante (version de test de la mise à jour, sans changement d'usage)
+
 ## 1.6.0
 
 - Mise à jour sur place sous Windows : le bouton « Mettre à jour » ne télécharge que les parties modifiées, puis « Redémarrer et installer » relance l'appli à la place de l'ancienne
