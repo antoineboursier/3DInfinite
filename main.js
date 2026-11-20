@@ -10,6 +10,20 @@ const fr = () => (app.getLocale() || 'fr').toLowerCase().startsWith('fr');
 const t = (f, e) => (fr() ? f : e);
 const isProject = (p) => /\.3di$/i.test(p || '');
 
+/* Mise à jour sur place (Windows) : electron-updater ne télécharge que les blocs modifiés, puis relance l'installeur en silence.
+   Mac et Linux gardent le lien vers la page de téléchargement (la mise à jour sur place d'une appli Mac exige une signature Apple). */
+let autoUpdater = null;
+if (process.platform === 'win32') {
+  try {
+    ({ autoUpdater } = require('electron-updater'));
+    autoUpdater.autoDownload = false;
+    autoUpdater.autoInstallOnAppQuit = true;      // si l'utilisateur ne redémarre pas lui-même, l'installation se fait à la fermeture
+    autoUpdater.logger = null;
+    autoUpdater.on('error', () => {});            // sans écouteur, un 'error' ferait planter le processus
+  } catch (e) { autoUpdater = null; }
+}
+const nativeUpdate = () => !!autoUpdater && (app.isPackaged || !!process.env.DI_NATIVE_UPDATE);
+
 app.setAppUserModelId('fr.antoineboursier.3dinfinite');
 
 /* ---------- projets récents : liste tenue par l'appli (userData/recent.json), lue par la page d'accueil ---------- */
@@ -202,8 +216,33 @@ function pickAsset(assets) {
   return assets.find(ok);
 }
 let checking = false, updateInfo = null;
+/* updateInfo = { version, current, url, notes, native, state: 'available' | 'downloading' | 'ready', percent, error } ; la page l'affiche */
+function pushUpdate(patch) { updateInfo = { ...updateInfo, ...patch }; if (win) win.webContents.send('update', updateInfo); }
+if (autoUpdater) autoUpdater.on('download-progress', (p) => pushUpdate({ state: 'downloading', percent: Math.round(p.percent || 0) }));
 ipcMain.handle('update:get', () => updateInfo);
-ipcMain.on('update:download', () => { if (updateInfo && /^https:\/\//.test(updateInfo.url)) shell.openExternal(updateInfo.url); });
+async function startUpdate() {
+  if (!updateInfo) return;
+  const openPage = () => { if (/^https:\/\//.test(updateInfo.url)) shell.openExternal(updateInfo.url); };
+  if (!nativeUpdate()) { openPage(); return; }                       // Mac, Linux, ou appli lancée depuis les sources
+  if (updateInfo.state === 'downloading' || updateInfo.state === 'ready') return;
+  pushUpdate({ state: 'downloading', percent: 0, error: null });
+  try {
+    const r = await autoUpdater.checkForUpdates();
+    if (!r || !r.isUpdateAvailable) throw new Error('aucune mise à jour trouvée');
+    await autoUpdater.downloadUpdate();
+    pushUpdate({ state: 'ready', percent: 100 });
+  } catch (e) {
+    // plan B : le téléchargement de l'installeur complet s'ouvre dans le navigateur (cas d'une release sans latest.yml, réseau coupé...)
+    pushUpdate({ state: 'available', percent: 0, error: 'auto' });
+    openPage();
+  }
+}
+ipcMain.on('update:download', startUpdate);
+ipcMain.on('update:install', () => {
+  if (!nativeUpdate() || !updateInfo || updateInfo.state !== 'ready') return;
+  forceClose = true;                                                 // la page a déjà proposé d'enregistrer
+  autoUpdater.quitAndInstall(true, true);                            // installation silencieuse, puis relance de l'appli
+});
 async function checkForUpdates(manual) {
   if (checking || !win) return;
   if (!manual && !app.isPackaged && !process.env.DI_CHECK_UPDATE) return;
@@ -222,14 +261,17 @@ async function checkForUpdates(manual) {
       const notes = String(rel.body || '').replace(/\r/g, '').replace(/^#+\s*/gm, '').replace(/\*\*|`/g, '').replace(/^\s*[-*]\s+/gm, '• ').trim();
       const short = notes.length > 700 ? notes.slice(0, 700).replace(/\s+\S*$/, '') + '…' : notes;
       // la page affiche l'information (page d'accueil et pastille de la barre) ; la boîte de dialogue ne sert qu'à la vérification manuelle
-      updateInfo = { version: latest, current: app.getVersion(), url, notes: short };
-      if (win) win.webContents.send('update', updateInfo);
-      if (manual) {
+      const keep = updateInfo && updateInfo.version === latest ? { state: updateInfo.state, percent: updateInfo.percent } : { state: 'available', percent: 0 };
+      pushUpdate({ version: latest, current: app.getVersion(), url, notes: short, native: nativeUpdate(), error: null, ...keep });
+      if (manual && keep.state === 'available') {
+        const native = nativeUpdate();
         const r = await dialog.showMessageBox(win, { type: 'info', defaultId: 0, cancelId: 1, noLink: true, title: '3DInfinite',
-          buttons: [t('Télécharger', 'Download'), t('Plus tard', 'Later')],
+          buttons: [native ? t('Mettre à jour', 'Update') : t('Télécharger', 'Download'), t('Plus tard', 'Later')],
           message: t(`Mise à jour disponible : 3DInfinite ${latest}`, `Update available: 3DInfinite ${latest}`),
-          detail: (short ? short + '\n\n' : '') + t(`Vous utilisez la version ${app.getVersion()}. Télécharger la nouvelle version ?`, `You are using version ${app.getVersion()}. Download the new version?`) });
-        if (r.response === 0) shell.openExternal(url);
+          detail: (short ? short + '\n\n' : '') + (native
+            ? t(`Vous utilisez la version ${app.getVersion()}. Mettre à jour maintenant ? Seules les parties modifiées sont téléchargées.`, `You are using version ${app.getVersion()}. Update now? Only the changed parts are downloaded.`)
+            : t(`Vous utilisez la version ${app.getVersion()}. Télécharger la nouvelle version ?`, `You are using version ${app.getVersion()}. Download the new version?`)) });
+        if (r.response === 0) startUpdate();
       }
     } else if (manual) {
       dialog.showMessageBox(win, { type: 'info', title: '3DInfinite', message: t('Vous utilisez la dernière version.', 'You are up to date.'), detail: 'v' + app.getVersion() });

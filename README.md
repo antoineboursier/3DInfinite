@@ -35,17 +35,29 @@ Pousser du code ne publie rien. Une version sort seulement quand tu le décides 
 3. Commit et push sur `main`.
 4. Sur GitHub : onglet **Actions** → **Publier une version officielle** → **Run workflow**.
 
-Environ 10 minutes plus tard, la release `v1.2.0` existe avec ses notes et trois fichiers prêts à l'emploi :
-`3DInfinite-Setup.exe` (Windows), `3DInfinite-mac-arm64.dmg` (Mac Apple Silicon), `3DInfinite-mac-x64.dmg` (Mac Intel).
+Environ 10 minutes plus tard, la release `v1.2.0` existe avec ses notes et ses fichiers :
+`3DInfinite-Setup.exe` (Windows), `3DInfinite-mac-arm64.dmg` (Mac Apple Silicon), `3DInfinite-mac-x64.dmg` (Mac Intel),
+plus `latest.yml` et les `.blockmap` (utilisés par la mise à jour sur place sous Windows).
 Le workflow refuse de tourner si la version est déjà publiée ou si ses notes manquent dans `CHANGELOG.md`.
 
 ## Ce que voient les utilisateurs
 
-Au lancement, l'appli lit la dernière release. Si elle est plus récente, une fenêtre affiche
-« Mise à jour disponible : 3DInfinite X.Y.Z », les nouveautés, et un bouton **Télécharger** :
-sous Windows il télécharge directement l'installeur, sous macOS il ouvre la page de téléchargement du site
-(réglable dans `config.js`, `updateTarget`). Menu **Aide → Rechercher des mises à jour…** pour le faire à la main.
+Au lancement, l'appli lit la dernière release. Si elle est plus récente, un bloc s'affiche sur la page d'accueil
+(et une pastille dans la barre) avec les nouveautés. Menu **Aide → Rechercher des mises à jour…** pour le faire à la main.
 Le dépôt doit rester **public** pour que l'appli et le site puissent lire les releases.
+
+**Windows : mise à jour sur place** (electron-updater). Le bouton **Mettre à jour** ne télécharge que les blocs modifiés
+(grâce au fichier `.blockmap`), puis **Redémarrer et installer** ferme l'appli, installe en silence au même endroit et la relance.
+Si l'utilisateur ne redémarre pas lui-même, l'installation se fait à la fermeture. Les projets et réglages sont conservés.
+Cela repose sur `latest.yml` et `3DInfinite-Setup.exe.blockmap`, publiés avec chaque release par le workflow : ne pas les retirer.
+Si ces fichiers manquent (release plus ancienne que la 1.6) ou si le réseau échoue, l'appli ouvre le téléchargement de
+l'installeur complet dans le navigateur.
+
+**macOS** : pas de mise à jour sur place (elle exige une appli signée par Apple, 99 € par an). Le bouton **Télécharger** ouvre la
+page de téléchargement du site (réglable dans `config.js`, `updateTarget`).
+
+La première version qui contient ce mécanisme doit s'installer à la main une dernière fois sur les postes qui ont une version plus
+ancienne. Les mises à jour suivantes se font sur place.
 
 ## Site internet
 

@@ -224,6 +224,7 @@ summary{cursor:pointer;font-weight:600;font-size:12.5px;margin-bottom:8px}
 .home-update .note{margin:2px 0 0}
 .hu-notes{margin:8px 0 0;max-height:96px;overflow:auto;white-space:pre-line;font-size:12.5px;color:var(--muted)}
 .home-update .acts{display:flex;gap:8px;flex:none}
+.hu-bar{display:block;width:100%;height:7px;margin-top:10px;accent-color:var(--select)}
 #h-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 #h-list li{display:flex;align-items:center;gap:8px}
 .rec{flex:1;min-width:0;display:grid;gap:1px;text-align:left;padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:linear-gradient(160deg,var(--panel-2),var(--panel))}
@@ -438,9 +439,10 @@ summary{cursor:pointer;font-weight:600;font-size:12.5px;margin-bottom:8px}
       <div>
         <b id="hu-title"></b>
         <p class="note" id="hu-cur"></p>
+        <progress class="hu-bar" id="hu-bar" max="100" value="0" hidden></progress>
         <p class="hu-notes" id="hu-notes"></p>
       </div>
-      <div class="acts"><button class="btn primary" id="hu-dl" data-t="Télécharger"></button><button class="btn" id="hu-later" data-t="Plus tard"></button></div>
+      <div class="acts"><button class="btn primary" id="hu-dl" data-t="Télécharger"></button><button class="btn primary" id="hu-install" data-t="Redémarrer et installer" hidden></button><button class="btn" id="hu-later" data-t="Plus tard"></button></div>
     </div>
     <div class="home-cols">
       <div class="home-card">
@@ -1237,11 +1239,18 @@ async function openRecent(r){
   const f=await DESK.openRecent(r.path);
   if(f) loadDoc(f); else { toast('Ce fichier est introuvable.'); await DESK.forgetRecent(r.path); fillRecent(); }
 }
+/* état de la mise à jour : disponible, téléchargement en cours (Windows : seuls les blocs modifiés), prête à installer */
 function renderUpdate(){
   const u=UPD; $('b-update').hidden=!u; $('home-update').hidden=!u; if(!u) return;
-  $('hu-title').textContent=T('Mise à jour disponible : version {0}',u.version);
-  $('hu-cur').textContent=T('Tu utilises la version {0}.',u.current);
-  $('hu-notes').textContent=u.notes||''; $('hu-notes').hidden=!u.notes;
+  const st=u.state||'available', down=st==='downloading', ready=st==='ready';
+  $('hu-title').textContent=ready?T('Version {0} prête à installer',u.version):down?T('Téléchargement de la version {0}…',u.version):T('Mise à jour disponible : version {0}',u.version);
+  $('hu-cur').textContent=ready?T("Redémarre l'appli pour l'installer. Sinon, elle s'installera à la fermeture."):down?T('Téléchargement : {0} %',u.percent||0)
+    :(u.error==='auto'?T("La mise à jour automatique a échoué : le téléchargement s'est ouvert dans ton navigateur. "):'')+T('Tu utilises la version {0}.',u.current);
+  $('hu-bar').hidden=!down; $('hu-bar').value=u.percent||0;
+  $('hu-notes').textContent=u.notes||''; $('hu-notes').hidden=!u.notes||down;
+  const dl=$('hu-dl'); dl.dataset.t=u.native?'Mettre à jour':'Télécharger'; dl.textContent=T(dl.dataset.t); dl.hidden=st!=='available';
+  $('hu-install').hidden=!ready; $('hu-later').hidden=down;
+  const lab=$('b-update').lastElementChild, key=ready?'Redémarrer pour mettre à jour':down?'Téléchargement…':'Mise à jour disponible'; lab.dataset.t=key; lab.textContent=T(key);
 }
 function showHome(){ if(!DESK) return; $('home').hidden=false; fillRecent(); renderUpdate(); $('h-new').focus(); }
 $('b-start').onclick=showHome; $('b-update').onclick=showHome; $('h-close').onclick=hideHome;
@@ -1250,6 +1259,7 @@ $('h-open').onclick=()=>{ if(DESK) openDialog(); };
 $('h-site').onclick=()=>{ if(DESK) DESK.openSite(); };
 $('h-contact').onclick=()=>{ hideHome(); openContact(); };
 $('hu-dl').onclick=()=>{ if(DESK) DESK.downloadUpdate(); };
+$('hu-install').onclick=async()=>{ if(DESK&&await guard(true)) DESK.installUpdate(); };   /* propose d'enregistrer le projet avant de redémarrer */
 $('hu-later').onclick=()=>{ $('home-update').hidden=true; };
 $('home').addEventListener('pointerdown',e=>{ if(e.target===$('home')) hideHome(); });
 addEventListener('keydown',e=>{ if(e.key==='Escape'&&!$('home').hidden) hideHome(); });
@@ -1842,6 +1852,10 @@ canvas.addEventListener('pointerup',endDrag); canvas.addEventListener('pointerca
 
 /* ---------- langues : le français sert de clé, l'anglais est une table ---------- */
 const EN={
+  'Mettre à jour':'Update','Redémarrer et installer':'Restart and install','Redémarrer pour mettre à jour':'Restart to update','Téléchargement…':'Downloading…',
+  'Version {0} prête à installer':'Version {0} ready to install','Téléchargement de la version {0}…':'Downloading version {0}…','Téléchargement : {0} %':'Downloading: {0} %',
+  "Redémarre l'appli pour l'installer. Sinon, elle s'installera à la fermeture.":'Restart the app to install it. Otherwise it will install when you close it.',
+  "La mise à jour automatique a échoué : le téléchargement s'est ouvert dans ton navigateur. ":'The automatic update failed: the download opened in your browser. ',
   "Contacter l'auteur":'Contact the author',"Une question, une idée, un bug ? Ton message arrive directement à l'auteur.":'A question, an idea, a bug? Your message goes straight to the author.',
   'Ton nom (facultatif)':'Your name (optional)','Ton e-mail (pour une réponse)':'Your email (to get a reply)','Ton message':'Your message',
   'Joindre le projet en cours':'Attach the current project','Ajouter un fichier':'Add a file','3 pièces jointes au plus, 3 Mo au total.':'Up to 3 attachments, 3 MB in total.',

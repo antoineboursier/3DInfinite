@@ -19,9 +19,10 @@ contextBridge.exposeInMainWorld('desktop', {
   openRecent: (p) => ipcRenderer.invoke('recent:open', p),        // -> {path,name,data}|null
   forgetRecent: (p) => ipcRenderer.invoke('recent:forget', p),
   openSite: () => ipcRenderer.send('link:site'),
-  getUpdate: () => ipcRenderer.invoke('update:get'),              // -> {version,current,url,notes}|null
-  downloadUpdate: () => ipcRenderer.send('update:download'),
-  onUpdate: (fn) => on('update', fn),                             // {version,current,url,notes}
+  getUpdate: () => ipcRenderer.invoke('update:get'),              // -> {version,current,url,notes,native,state,percent,error}|null
+  downloadUpdate: () => ipcRenderer.send('update:download'),     // Windows : télécharge la mise à jour sur place ; ailleurs : ouvre la page
+  installUpdate: () => ipcRenderer.send('update:install'),       // redémarre l'appli et installe (quand state === 'ready')
+  onUpdate: (fn) => on('update', fn),                             // {version,current,url,notes,native,state,percent,error}
   /* événements venant du menu / du système */
   onMenu: (fn) => on('menu', fn),            // 'new'|'open'|'save'|'saveAs'|'close-request'|'contact'
   onEdit: (fn) => on('edit', fn),            // 'copy'|'paste'|'selectAll' (menu Édition macOS)

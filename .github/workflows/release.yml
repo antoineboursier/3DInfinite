@@ -56,6 +56,8 @@ jobs:
           path: |
             release/*.exe
             release/*.dmg
+            release/latest*.yml
+            release/*.blockmap
           if-no-files-found: error
 
   publish:

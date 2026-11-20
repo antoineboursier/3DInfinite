@@ -34,6 +34,13 @@
     "appId": "fr.antoineboursier.3dinfinite",
     "productName": "3DInfinite",
     "copyright": "3DInfinite",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "antoineboursier",
+        "repo": "3DInfinite"
+      }
+    ],
     "directories": {
       "buildResources": "build",
       "output": "release"
@@ -94,5 +101,8 @@
       "category": "Graphics",
       "artifactName": "3DInfinite.${ext}"
     }
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.11"
   }
 }
