@@ -9,6 +9,23 @@ function makeGeom(wasm){
     return out;
   }
 
+
+  const polyArea=c=>{ let a=0; for(let i=0,n=c.length;i<n;i++){ const p=c[i], q=c[(i+1)%n]; a+=p[0]*q[1]-q[0]*p[1]; } return a/2; };
+  /* Nettoyage 2D avant extrusion : points trop proches, simplification (Douglas-Peucker), débris et trous minuscules, filaments.
+     Les seuils sont en mm ; opts.open > 0 ajoute une ouverture morphologique (supprime ce qui est plus fin que 2 x open). */
+  function cleanPolys(polys, o){
+    o=o||{}; const minDist=o.minDist||0, eps=o.eps||0, minArea=o.minArea||0, open=o.open||0;
+    let ps=polys.map(c=>{ if(!minDist) return c; const out=[]; for(const p of c){ const q=out[out.length-1]; if(!q||Math.hypot(p[0]-q[0],p[1]-q[1])>=minDist) out.push(p); }
+      while(out.length>1&&Math.hypot(out[0][0]-out[out.length-1][0],out[0][1]-out[out.length-1][1])<minDist) out.pop(); return out; }).filter(c=>c.length>2);
+    if(!ps.length) return [];
+    let cs=new CrossSection(ps,"EvenOdd");
+    const step=n=>{ cs.delete(); cs=n; };
+    if(open>0){ const e=cs.offset(-open,"Miter",2); step(e.offset(open,"Miter",2)); e.delete(); }
+    if(eps>0) step(cs.simplify(eps));
+    ps=cs.toPolygons().map(dedupe).filter(c=>c.length>2&&Math.abs(polyArea(c))>=minArea);
+    cs.delete(); return ps;
+  }
+
   /* Arrondit les angles vifs d'un contour fermé, façon « rayon d'angle » : les courbes (suites de petits segments) ne sont pas touchées,
      et le rayon se réduit tout seul quand le côté est trop court. */
   function roundContour(c, r){
@@ -62,6 +79,7 @@ function makeGeom(wasm){
   /* contours sources -> section propre (angles arrondis, contour évidé éventuel) */
   function buildSection(src, fill, r, outline){
     let cs=new CrossSection(src, fill||'NonZero');
+    { const ps=cleanPolys(cs.toPolygons(),{minDist:.005,eps:.001,minArea:.02}); if(ps.length){ cs.delete(); cs=new CrossSection(ps,'EvenOdd'); } }
     if(r>0){ const polys=cs.toPolygons().map(dedupe).filter(c=>c.length>2).map(c=>roundContour(c,r)); cs.delete(); cs=new CrossSection(polys,'EvenOdd'); }
     if(outline>0){ const inner=cs.offset(-outline,'Miter',4); const ring=cs.subtract(inner); inner.delete(); if(!ring.isEmpty()){ cs.delete(); cs=ring; } else ring.delete(); }
     return cs;
@@ -186,5 +204,5 @@ function makeGeom(wasm){
     cs.delete();
     return man;
   }
-  return {roundContour, buildSection, profileSolid, dedupe};
+  return {roundContour, buildSection, profileSolid, dedupe, cleanPolys};
 }

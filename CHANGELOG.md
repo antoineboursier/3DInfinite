@@ -3,6 +3,15 @@
 Chaque version officielle a sa section `## X.Y.Z`. Ce texte devient la note de la release GitHub
 et s'affiche dans la fenêtre « Mise à jour disponible » de l'appli. Reste court : une liste de ce qui change pour l'utilisateur.
 
+## 1.7.0
+
+- Export 3MF et fusions multicolores nettoyés : les contours des dessins SVG sont simplifiés et allégés (environ deux fois moins de triangles), les débris et filaments minuscules disparaissent, et plus aucune arête de moins de 5 µm ne vient perturber le logiciel de découpe
+- Export 3MF : sommets soudés à 0,0001 mm et triangles écrasés retirés
+- Import de plusieurs SVG à la fois, et export de chaque pièce à part en STL ou 3MF (.zip)
+- Grille : arrondi extérieur et arrondi intérieur des cases
+- Interface : icônes pour les arrondis, couleurs des axes X, Y, Z sur les champs, séparateurs dans le panneau de l'objet, cotes plus discrètes
+- Alignement : clic sur un point autour de la sélection, directement sur le plateau
+
 ## 1.6.1
 
 - Mise à jour sur place : vérification de la version suivante (version de test de la mise à jour, sans changement d'usage)

@@ -124,6 +124,7 @@ const FILTERS = {
   project: [{ name: t('Projet 3DInfinite', '3DInfinite project'), extensions: ['3di'] }],
   stl: [{ name: 'STL', extensions: ['stl'] }],
   '3mf': [{ name: '3MF', extensions: ['3mf'] }],
+  zip: [{ name: 'ZIP', extensions: ['zip'] }],
 };
 ipcMain.handle('app:info', () => ({ version: app.getVersion(), platform: process.platform }));
 ipcMain.handle('file:save', async (_e, o) => {
